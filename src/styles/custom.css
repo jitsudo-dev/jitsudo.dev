@@ -1,0 +1,13 @@
+/* jitsudo brand customizations for Starlight */
+
+:root {
+  --sl-color-accent-low: #3a1a05;
+  --sl-color-accent: #c2410c;
+  --sl-color-accent-high: #f97316;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #fff7ed;
+  --sl-color-accent: #ea580c;
+  --sl-color-accent-high: #9a3412;
+}

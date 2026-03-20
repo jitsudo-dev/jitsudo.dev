@@ -1,0 +1,71 @@
+---
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import ArchDiagram from '../components/ArchDiagram.astro';
+import FeatureCards from '../components/FeatureCards.astro';
+import CtaBanner from '../components/CtaBanner.astro';
+import Footer from '../components/Footer.astro';
+
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/700.css';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="sudo for your cloud. JIT privileged access management for AWS, Azure, GCP, and Kubernetes. Built for SREs and AI agents." />
+    <meta property="og:title" content="jitsudo — sudo for your cloud" />
+    <meta property="og:description" content="JIT privileged access for AWS, Azure, GCP, and Kubernetes. Zero persistent elevation. Open source." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://jitsudo.dev" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>jitsudo — sudo for your cloud</title>
+  </head>
+
+  <body>
+    <Nav />
+    <main>
+      <Hero />
+      <ArchDiagram />
+      <FeatureCards />
+      <CtaBanner />
+    </main>
+    <Footer />
+  </body>
+</html>
+
+<style is:global>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    background: #18191b;
+    color: #f8fafc;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: #18191b;
+    min-height: 100vh;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  img, svg {
+    display: block;
+    max-width: 100%;
+  }
+</style>

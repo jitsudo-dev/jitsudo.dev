@@ -1,0 +1,222 @@
+---
+// Rich link footer — three columns + copyright
+---
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="/" class="logo" aria-label="jitsudo home">
+        <span class="logo-dot" aria-hidden="true"></span>
+        <span class="logo-text">jitsudo</span>
+      </a>
+      <p class="tagline">sudo for your cloud.<br>JIT privileged access management.</p>
+      <div class="social-links">
+        <a href="https://github.com/jitsudo-dev/jitsudo" target="_blank" rel="noopener" aria-label="GitHub">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-links">
+      <div class="link-group">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="/docs/quickstart/">Quickstart</a></li>
+          <li><a href="/docs/what-is-jitsudo/">What is jitsudo?</a></li>
+          <li><a href="/docs/installation/">Installation</a></li>
+          <li><a href="/docs/architecture/overview/">Architecture</a></li>
+          <li><a href="/docs/cli/request/">CLI Reference</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h4>Guides</h4>
+        <ul>
+          <li><a href="/guides/deployment/docker-compose/">Docker Compose</a></li>
+          <li><a href="/guides/deployment/kubernetes/">Kubernetes (Helm)</a></li>
+          <li><a href="/guides/providers/aws/">AWS Provider</a></li>
+          <li><a href="/guides/providers/gcp/">GCP Provider</a></li>
+          <li><a href="/guides/writing-policies/">Writing Policies</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h4>Community</h4>
+        <ul>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo" target="_blank" rel="noopener">GitHub</a></li>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/issues" target="_blank" rel="noopener">Issues</a></li>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/discussions" target="_blank" rel="noopener">Discussions</a></li>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a></li>
+        </ul>
+      </div>
+
+      <div class="link-group">
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/blob/main/LICENSE-APACHE" target="_blank" rel="noopener">Apache 2.0 (CLI)</a></li>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/blob/main/LICENSE-ELv2" target="_blank" rel="noopener">ELv2 (Server)</a></li>
+          <li><a href="https://github.com/jitsudo-dev/jitsudo/blob/main/SECURITY.md" target="_blank" rel="noopener">Security Policy</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-bottom-inner">
+      <span>© 2026 jitsudo contributors</span>
+      <span class="sep" aria-hidden="true">·</span>
+      <span>CLI: Apache 2.0</span>
+      <span class="sep" aria-hidden="true">·</span>
+      <span>Server: Elastic License v2</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: #18191b;
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 3.5rem 2rem 2.5rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 4rem;
+  }
+
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f97316;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+  }
+
+  .tagline {
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  .social-links {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .social-links a {
+    color: #475569;
+    transition: color 0.15s;
+  }
+
+  .social-links a:hover {
+    color: #94a3b8;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+
+  .link-group h4 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 1rem;
+  }
+
+  .link-group ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .link-group a {
+    font-size: 0.85rem;
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .link-group a:hover {
+    color: #94a3b8;
+  }
+
+  .footer-bottom {
+    border-top: 1px solid #2a2d31;
+  }
+
+  .footer-bottom-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.78rem;
+    color: #475569;
+  }
+
+  .sep {
+    color: #2a2d31;
+  }
+
+  @media (max-width: 1024px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .footer-links {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .footer-links {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    .footer-bottom-inner {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.25rem;
+    }
+
+    .sep {
+      display: none;
+    }
+  }
+</style>

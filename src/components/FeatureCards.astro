@@ -1,0 +1,164 @@
+---
+// 3×2 feature card grid — AI-forward ordering
+const features = [
+  {
+    icon: 'bot',
+    color: '#818cf8',
+    bg: '#1e1b4b',
+    title: 'AI agent native',
+    body: 'MCP server interface lets agents request JIT access without human-in-the-loop for pre-approved patterns.',
+  },
+  {
+    icon: 'check',
+    color: '#22c55e',
+    bg: '#052e16',
+    title: 'Zero persistent elevation',
+    body: 'All access grants expire automatically. No standing admin roles, ever.',
+  },
+  {
+    icon: 'code',
+    color: '#f472b6',
+    bg: '#2d1b2e',
+    title: 'Policy as code',
+    body: 'OPA-backed policies live in git. Who, what, when — fully auditable and version-controlled.',
+  },
+  {
+    icon: 'globe',
+    color: '#facc15',
+    bg: '#1c1a05',
+    title: 'Multi-cloud',
+    body: 'AWS, Azure, GCP, and Kubernetes via a unified provider plugin interface.',
+  },
+  {
+    icon: 'clock',
+    color: '#38bdf8',
+    bg: '#082f49',
+    title: 'Audit-first',
+    body: 'Every request, approval, and expiry written to a unified, tamper-evident audit log.',
+  },
+  {
+    icon: 'server',
+    color: '#94a3b8',
+    bg: '#1c1e22',
+    title: 'Self-hosted',
+    body: 'Deploy with Docker Compose or Helm. No cloud dependency, no SaaS vendor lock-in.',
+  },
+];
+---
+
+<section class="features">
+  <div class="features-inner">
+    <div class="section-eyebrow">WHY JITSUDO</div>
+    <h2>Built for the agentic era</h2>
+
+    <div class="grid">
+      {features.map((f) => (
+        <div class="card">
+          <div class="card-icon" style={`color: ${f.color}; background: ${f.bg};`}>
+            {f.icon === 'bot'    && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="10" x="3" y="11" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>}
+            {f.icon === 'check'  && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>}
+            {f.icon === 'code'   && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>}
+            {f.icon === 'globe'  && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>}
+            {f.icon === 'clock'  && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>}
+            {f.icon === 'server' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>}
+          </div>
+          <h3>{f.title}</h3>
+          <p>{f.body}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .features {
+    padding: 5rem 2rem;
+    border-bottom: 1px solid #2a2d31;
+  }
+
+  .features-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .section-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #f97316;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.025em;
+    margin: 0 0 3rem;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #2a2d31;
+    border: 1px solid #2a2d31;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .card {
+    background: #18191b;
+    padding: 1.75rem;
+    text-align: left;
+    transition: background 0.15s ease;
+  }
+
+  .card:hover {
+    background: #1c1e22;
+  }
+
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+
+  h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #f1f5f9;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    font-size: 0.875rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    h2 {
+      font-size: 1.75rem;
+    }
+  }
+</style>

@@ -1,0 +1,105 @@
+---
+// Navigation bar — flat links, no hover dropdowns (Dagger style)
+---
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="logo" aria-label="jitsudo home">
+      <span class="logo-dot" aria-hidden="true"></span>
+      <span class="logo-text">jitsudo</span>
+    </a>
+
+    <div class="nav-links">
+      <a href="/docs/what-is-jitsudo/">Docs</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="https://github.com/jitsudo-dev/jitsudo" target="_blank" rel="noopener">GitHub</a>
+    </div>
+
+    <a href="/docs/quickstart/" class="btn-cta">Get started</a>
+  </div>
+</nav>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(24, 25, 27, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid #2a2d31;
+  }
+
+  .nav-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  .logo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f97316;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 2rem;
+    margin-left: auto;
+  }
+
+  .nav-links a {
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 450;
+    transition: color 0.15s ease;
+  }
+
+  .nav-links a:hover {
+    color: #f8fafc;
+  }
+
+  .btn-cta {
+    padding: 0.45rem 1rem;
+    border: 1px solid #f97316;
+    border-radius: 6px;
+    color: #f97316;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background 0.15s ease, color 0.15s ease;
+    flex-shrink: 0;
+  }
+
+  .btn-cta:hover {
+    background: #f97316;
+    color: #18191b;
+  }
+
+  @media (max-width: 640px) {
+    .nav-links {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,99 @@
+---
+// Terminal window mockup — static HTML styled to look like a real terminal
+---
+
+<div class="terminal" role="img" aria-label="jitsudo CLI demo">
+  <div class="terminal-header" aria-hidden="true">
+    <span class="dot dot-red"></span>
+    <span class="dot dot-yellow"></span>
+    <span class="dot dot-green"></span>
+    <span class="terminal-title">jitsudo — zsh</span>
+  </div>
+  <div class="terminal-body">
+    <pre class="terminal-pre"><span class="comment"># request S3 read access for 15 min</span>
+<span class="prompt">❯</span> <span class="cmd">jitsudo</span> <span class="arg">request aws s3:GetObject \</span>
+    <span class="arg">--ttl 15m --reason "prod debug"</span>
+Submitting request...
+<span class="success">✓ Auto-approved</span> <span class="muted">(trust tier 3)</span>
+Session: <span class="accent">jit-a1b2c3d4</span>
+Expires: <span class="accent">14:47 UTC</span>
+
+<span class="comment"># confirm active sessions</span>
+<span class="prompt">❯</span> <span class="cmd">jitsudo</span> <span class="arg">sessions --active</span>
+<span class="header-row">ID            RESOURCE     TTL  STATUS</span>
+<span class="accent">jit-a1b2c3d4</span>  aws/s3:Get*  12m  <span class="success">active</span>
+
+<span class="comment"># access auto-revokes at expiry</span>
+<span class="prompt">❯</span> <span class="cursor">█</span></pre>
+  </div>
+</div>
+
+<style>
+  .terminal {
+    background: #0f1117;
+    border-radius: 10px;
+    border: 1px solid #2a2d31;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .terminal-header {
+    background: #1c1e22;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-bottom: 1px solid #2a2d31;
+  }
+
+  .dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-red    { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green  { background: #28c840; }
+
+  .terminal-title {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: #475569;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', 'Consolas', monospace;
+  }
+
+  .terminal-body {
+    padding: 1.25rem 1.5rem 1.5rem;
+  }
+
+  .terminal-pre {
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Menlo', 'Consolas', monospace;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: #cbd5e1;
+    white-space: pre;
+    overflow-x: auto;
+  }
+
+  .comment  { color: #475569; }
+  .prompt   { color: #f97316; }
+  .cmd      { color: #f97316; font-weight: 600; }
+  .arg      { color: #e2e8f0; }
+  .success  { color: #22c55e; }
+  .muted    { color: #64748b; }
+  .accent   { color: #f97316; }
+  .header-row { color: #64748b; }
+
+  .cursor {
+    display: inline-block;
+    color: #f97316;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+</style>
