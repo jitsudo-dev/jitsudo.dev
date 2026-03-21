@@ -206,6 +206,39 @@ auth:
 
 ---
 
+## Security Considerations
+
+### Group claim trust
+
+jitsudo trusts the `groups` claim in the OIDC ID token without independent verification. This means:
+
+- Your IdP is the authoritative source of group membership
+- If an attacker can modify group claims at your IdP (e.g., through a compromised admin account or IdP misconfiguration), they could satisfy approval policies they should not
+- Audit your IdP group membership regularly
+- Restrict who can modify group assignments in your IdP
+
+### Recommended JWT lifetime
+
+Use short JWT lifetimes (60–120 minutes) in your IdP configuration. jitsudo validates JWT expiry on every API call, but a stolen JWT is valid until it expires. Shorter lifetimes limit the replay window.
+
+- Okta / Entra ID / Keycloak all support configuring access token and ID token lifetimes
+- Do not set lifetimes above 4 hours for production use
+
+### Offboarding principals
+
+Revoking an IdP account or removing group memberships blocks new elevation requests immediately — the next request will fail eligibility evaluation.
+
+**However, active grants are not automatically revoked.** Always run:
+
+```bash
+jitsudo status --user departing-engineer@example.com --state active
+jitsudo revoke <each-active-request-id>
+```
+
+See [Writing Policies — Principal Lifecycle](/docs/guides/writing-policies/#identity-groups-and-principal-lifecycle) for the full offboarding procedure.
+
+---
+
 ## Troubleshooting
 
 ### Token validation fails with `iss` mismatch

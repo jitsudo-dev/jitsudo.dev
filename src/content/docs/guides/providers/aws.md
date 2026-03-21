@@ -5,6 +5,16 @@ description: Set up jitsudo to grant temporary elevated access on AWS via STS As
 
 The AWS provider grants temporary elevated access using AWS STS AssumeRole (the default) or IAM Identity Center account assignment. Credentials are returned as standard AWS environment variables and work with any AWS SDK or CLI.
 
+:::tip[Prerequisites at a glance]
+Before configuring the AWS provider, jitsudod needs:
+- An IAM role (or EC2/EKS instance role) with `sts:AssumeRole` on each target role
+- `iam:PutRolePolicy` on each target role (for early revocation)
+- Each target role's **trust policy** must allow jitsudod's identity to assume it
+- For Kubernetes deployments: IRSA (IAM Roles for Service Accounts) is supported — no static credentials required
+
+See [Prerequisites](#prerequisites) below for exact IAM policy documents.
+:::
+
 ## How It Works
 
 ### STS AssumeRole mode (default)

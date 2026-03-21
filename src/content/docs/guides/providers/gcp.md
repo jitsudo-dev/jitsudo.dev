@@ -5,6 +5,15 @@ description: Set up jitsudo to grant temporary elevated access on GCP via IAM co
 
 The GCP provider grants temporary elevated access by creating IAM conditional role bindings on GCP projects. The binding includes a CEL expiry expression that natively limits the effective duration at the GCP IAM layer.
 
+:::tip[Prerequisites at a glance]
+Before configuring the GCP provider, the jitsudod service account needs on each managed project:
+- `resourcemanager.projects.getIamPolicy`
+- `resourcemanager.projects.setIamPolicy`
+- For Kubernetes deployments: GCP Workload Identity Federation is supported — no service account key files required
+
+See [Prerequisites](#prerequisites) below for exact IAM grant commands.
+:::
+
 ## How It Works
 
 1. jitsudod calls `GetIamPolicy` on the target project to fetch the current policy.

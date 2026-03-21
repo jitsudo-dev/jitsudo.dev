@@ -1,0 +1,161 @@
+---
+// Kubernetes analogy section — surfaces the architecture doc callout on the homepage
+---
+
+<section class="kube">
+  <div class="kube-inner">
+    <div class="section-eyebrow">FAMILIAR BY DESIGN</div>
+    <h2>If you know Kubernetes,<br>you already understand jitsudo.</h2>
+    <p class="kube-desc">
+      jitsudo follows the same control plane / client architecture as Kubernetes.
+      The same mental model applies — just for cloud IAM instead of container workloads.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Kubernetes</th>
+            <th>jitsudo</th>
+            <th>What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>kube-apiserver</code></td>
+            <td><code>jitsudod</code></td>
+            <td>The authoritative control plane; source of truth for all state</td>
+          </tr>
+          <tr>
+            <td><code>kubectl</code></td>
+            <td><code>jitsudo</code> CLI</td>
+            <td>The primary human-operated client</td>
+          </tr>
+          <tr>
+            <td>Operators, webhooks</td>
+            <td>MCP agents, approval bots</td>
+            <td>Programmatic clients using the same API</td>
+          </tr>
+          <tr>
+            <td>RBAC</td>
+            <td>OPA policy engine</td>
+            <td>Defines who can do what, and under what conditions</td>
+          </tr>
+          <tr>
+            <td>etcd</td>
+            <td>PostgreSQL</td>
+            <td>Persistent, consistent state store</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <a href="/docs/architecture/overview/" class="kube-link">Read the architecture overview →</a>
+  </div>
+</section>
+
+<style>
+  .kube {
+    padding: 5rem 2rem;
+    border-bottom: 1px solid #2a2d31;
+  }
+
+  .kube-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .section-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: #f97316;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+  }
+
+  .kube-desc {
+    font-size: 1rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    max-width: 540px;
+    margin: 0 auto 2.5rem;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid #2a2d31;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
+  }
+
+  thead tr {
+    background: #1c1e22;
+    border-bottom: 1px solid #2a2d31;
+  }
+
+  th {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+  }
+
+  td {
+    padding: 0.75rem 1.25rem;
+    color: #cbd5e1;
+    border-bottom: 1px solid #1e2025;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  tr:hover td {
+    background: #1c1e22;
+  }
+
+  code {
+    font-family: 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: #7dd3fc;
+    background: #0f1e33;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  .kube-link {
+    font-size: 0.875rem;
+    color: #f97316;
+    text-decoration: none;
+  }
+
+  .kube-link:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    h2 {
+      font-size: 1.75rem;
+    }
+  }
+</style>

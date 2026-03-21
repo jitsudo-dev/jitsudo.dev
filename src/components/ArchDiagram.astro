@@ -7,8 +7,7 @@
     <div class="section-eyebrow">ARCHITECTURE</div>
     <h2>Control plane you deploy,<br>providers you trust</h2>
     <p class="arch-desc">
-      A lightweight daemon handles all elevation logic. Humans approve via Slack.
-      AI agents request via MCP. Everything expires automatically.
+      A self-hosted control plane routes every elevation request through a three-tier approval model — from millisecond auto-approval to AI-assisted review to human sign-off. Everything expires automatically.
     </p>
 
     <div class="diagram-container">
@@ -44,7 +43,7 @@
           </div>
         </div>
 
-        <!-- Arrow right -->
+        <!-- Arrow right (to providers) -->
         <div class="arrow-col">
           <div class="arrow-label">provider plugin</div>
           <div class="arrow-line">
@@ -61,6 +60,30 @@
             <div class="box">Azure AD</div>
             <div class="box">GCP IAM</div>
             <div class="box">Kubernetes RBAC</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Approval tiers row -->
+      <div class="tiers-row">
+        <div class="tiers-label">APPROVAL TIERS</div>
+        <div class="tiers-boxes">
+          <div class="tier-box tier-1">
+            <span class="tier-num">Tier 1</span>
+            <span class="tier-desc">OPA auto-approve</span>
+            <span class="tier-badge">Milestone 4</span>
+          </div>
+          <div class="tier-arrow">→</div>
+          <div class="tier-box tier-2">
+            <span class="tier-num">Tier 2</span>
+            <span class="tier-desc">AI review (MCP)</span>
+            <span class="tier-badge">Milestone 4</span>
+          </div>
+          <div class="tier-arrow">→</div>
+          <div class="tier-box tier-3">
+            <span class="tier-num">Tier 3</span>
+            <span class="tier-desc">Human approval</span>
+            <span class="tier-badge tier-badge-live">Available now</span>
           </div>
         </div>
       </div>
@@ -246,6 +269,81 @@
     font-size: 1.1rem;
     line-height: 1;
     margin-left: -2px;
+  }
+
+  .tiers-row {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2a2d31;
+  }
+
+  .tiers-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  .tiers-boxes {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tier-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    border: 1px solid #2a2d31;
+    background: #18191b;
+    min-width: 130px;
+  }
+
+  .tier-1 { border-color: #1e3a5f; background: #0f1e33; }
+  .tier-2 { border-color: #1e3a5f; background: #0f1e33; }
+  .tier-3 { border-color: #1a3a1a; background: #0f1f0f; }
+
+  .tier-num {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #7dd3fc;
+    letter-spacing: 0.05em;
+  }
+
+  .tier-3 .tier-num { color: #86efac; }
+
+  .tier-desc {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    text-align: center;
+  }
+
+  .tier-badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    background: #1e2a3a;
+    color: #64748b;
+    border: 1px solid #2a3a4a;
+  }
+
+  .tier-badge-live {
+    background: #0f2010;
+    color: #86efac;
+    border-color: #1a4a1a;
+  }
+
+  .tier-arrow {
+    color: #475569;
+    font-size: 1rem;
   }
 
   @media (max-width: 640px) {

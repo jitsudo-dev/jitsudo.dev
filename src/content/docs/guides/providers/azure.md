@@ -5,6 +5,15 @@ description: Set up jitsudo to grant temporary elevated access on Azure via RBAC
 
 The Azure provider grants temporary elevated access by creating Azure RBAC role assignments via the ARM Authorization API. User principal IDs are resolved automatically from Entra ID (Azure AD) via the Microsoft Graph API.
 
+:::tip[Prerequisites at a glance]
+Before configuring the Azure provider, jitsudod needs an Entra ID service principal or managed identity with:
+- `Microsoft.Authorization/roleAssignments/write` and `read/delete` on target scopes (ARM)
+- `User.Read.All` on Microsoft Graph (to resolve user principal IDs from email)
+- For AKS deployments: Azure Workload Identity is supported — no client secrets required
+
+See [Prerequisites](#prerequisites) below for exact role assignment and Graph permission setup.
+:::
+
 ## How It Works
 
 1. jitsudod resolves the user's Azure object ID from their UPN (email) via Microsoft Graph.

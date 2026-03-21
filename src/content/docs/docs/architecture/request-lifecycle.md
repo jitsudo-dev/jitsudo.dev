@@ -1,33 +1,61 @@
 ---
 title: Request Lifecycle
-description: How elevation requests move through the jitsudo state machine.
+description: How elevation requests move through the jitsudo state machine, including the three-tier approval routing model.
 ---
+
+import { Aside } from '@astrojs/starlight/components';
 
 ## State Machine
 
 ```
            ┌──────────┐
-           │ PENDING  │  ← Request submitted, awaiting approval
+           │ PENDING  │  ← Request submitted, awaiting approval routing
            └────┬─────┘
                 │
-       ┌────────┴────────┐
-       ▼                 ▼
-  ┌─────────┐       ┌──────────┐
-  │APPROVED │       │ REJECTED │  (terminal)
-  └────┬────┘       └──────────┘
-       │  Provider Grant() called
-       ▼
-  ┌─────────┐
-  │ ACTIVE  │  ← Credentials issued, elevation in effect
-  └────┬────┘
-       │
-  ┌────┴──────────────┐
-  ▼                   ▼
+                │ OPA evaluates approver_tier
+                │
+  ┌─────────────┼──────────────┐
+  │             │              │
+  ▼             ▼              ▼
+Tier 1       Tier 2         Tier 3
+(auto)      (ai_review)    (human)
+  │             │              │
+  │         AI evaluates    Approver
+  │         ┌──┤             action
+  │         ▼  ▼
+  │      approve / escalate ──→ Tier 3
+  │
+  ▼
+┌─────────┐        ┌──────────┐
+│APPROVED │        │ REJECTED │  (terminal)
+└────┬────┘        └──────────┘
+     │  Provider Grant() called
+     ▼
+┌─────────┐
+│ ACTIVE  │  ← Credentials issued, elevation in effect
+└────┬────┘
+     │
+┌────┴──────────────┐
+▼                   ▼
 ┌──────────┐    ┌──────────┐
 │ EXPIRED  │    │ REVOKED  │  ← Early revocation by admin or requester
 │(terminal)│    │(terminal)│
 └──────────┘    └──────────┘
 ```
+
+## Approval Tiers
+
+The OPA policy engine routes each request to one of three approval paths immediately after submission. The routing decision is based on the request attributes and the requesting principal's trust tier.
+
+| Tier | Who decides | When used | Status |
+|------|------------|-----------|--------|
+| **Tier 1** | OPA policy (auto) | Low-risk operations, high-trust principals | Milestone 4 |
+| **Tier 2** | AI agent via MCP | Medium-risk with active incident context | Milestone 4 |
+| **Tier 3** | Policy-designated human | High-risk operations; Tier 2 escalations | Available now |
+
+<Aside type="note" title="Current behavior">
+In the current release, all requests are routed directly to Tier 3 (human approval). Tier 1 and Tier 2 routing will be introduced in Milestone 4. See [Approval Model](/docs/architecture/approval-model/) for the full design.
+</Aside>
 
 ## Transition Rules
 
@@ -41,7 +69,8 @@ description: How elevation requests move through the jitsudo state machine.
 Break-glass is a special request mode for emergency situations where waiting for approver action is not acceptable.
 
 - Invoked with `jitsudo request --break-glass`
-- Transitions directly from PENDING to ACTIVE (bypasses approval)
+- Transitions directly from PENDING to ACTIVE (bypasses all approval tiers)
 - Triggers immediate high-priority alerts to all configured notification channels
 - Prominently flagged in audit reports
 - Eligibility for break-glass is controlled by policy (not all users may invoke it)
+- Full audit trail is preserved — break-glass does not bypass logging

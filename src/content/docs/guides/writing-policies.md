@@ -179,8 +179,10 @@ package jitsudo.approval
 default allow = false
 ```
 
-:::note
-Approval policies currently gate whether the request is approvable. Automatic approval (auto-approve without approver action) is planned for a future release.
+:::caution[Not yet available: auto-approval and AI-assisted review]
+Approval policies currently route all requests to **Tier 3 (human approval)**. Policy-driven auto-approval (Tier 1) and AI-assisted review (Tier 2) are planned for [Milestone 4](/roadmap/).
+
+The `approver_tier` output field and `input.trust_tier` input field are part of the Milestone 4 policy schema. See [Approval Model](/docs/architecture/approval-model/) for the full design.
 :::
 
 ### Example: Require SRE Lead Approval for Production
@@ -289,3 +291,77 @@ All eligibility policies must use the package `jitsudo.eligibility`.
 All approval policies must use the package `jitsudo.approval`.
 
 Any Rego that is valid within these packages is supported, including imports, helper rules, and `future.keywords`.
+
+---
+
+## Identity, Groups, and Principal Lifecycle
+
+### Groups come from your IdP — jitsudo trusts them
+
+The `user.groups` field in the policy input is sourced directly from the `groups` claim in the OIDC ID token. jitsudo does not manage group membership — it reads it from your identity provider at request time.
+
+**This means group membership security is your IdP's responsibility.** Ensure your IdP is the authoritative source of group assignments, and that group membership changes propagate promptly (most IdPs include group claims in the next token after a membership change).
+
+:::caution
+Compromised IdP group claims would allow an attacker to impersonate group membership and potentially satisfy approval policies. Secure your IdP, audit group membership regularly, and use short JWT lifetimes (60–120 minutes recommended) to limit the replay window.
+:::
+
+### Offboarding a principal
+
+When an engineer leaves the team or company:
+
+1. **Revoke their IdP account or remove them from all jitsudo-relevant groups.** This blocks new elevation requests immediately — the next request will fail eligibility evaluation.
+2. **Revoke any active grants**: `jitsudo revoke --user alice@example.com --all`
+3. **Active grants do not expire automatically on offboarding** — they only expire at their natural TTL. Always explicitly revoke on offboarding.
+
+```bash
+# List all active grants for a user
+jitsudo status --user alice@example.com --state active
+
+# Revoke each active grant
+jitsudo revoke req_01J8KZ...
+```
+
+### Token lifetime and replay
+
+jitsudo validates JWT expiry on every API call. There are no long-lived API tokens or session tokens beyond the JWT TTL. Use short JWT lifetimes (60–120 minutes) in your IdP configuration to minimize the replay window.
+
+A stolen but unexpired JWT can be used to submit requests until it expires. Short lifetimes + IdP session revocation are the primary mitigations.
+
+---
+
+## Three-Tier Approval Routing (Milestone 4)
+
+In the Milestone 4 policy schema, approval policies will be able to return `approver_tier` as a first-class output, routing the request to OPA auto-approval (Tier 1), AI-assisted review (Tier 2), or human approval (Tier 3).
+
+The following is a preview of the Milestone 4 policy shape — **not available in the current release**:
+
+```rego
+package jitsudo.approval
+
+import future.keywords.if
+import future.keywords.in
+
+read_only_roles := {"prod-read-only", "roles/viewer", "view"}
+
+# Tier 1: auto-approve for low-risk, high-trust requests
+approver_tier := "auto" if {
+    input.trust_tier >= 3
+    input.request.role in read_only_roles
+    input.request.duration_seconds <= 1800
+}
+
+# Tier 2: AI review when an active incident is linked
+approver_tier := "ai_review" if {
+    not tier1_conditions
+    regex.match(`INC-\d+`, input.request.reason)
+}
+
+# Tier 3: human approval (catch-all)
+approver_tier := "human" if {
+    not tier1_conditions
+    not tier2_conditions
+}
+```
+
+See [Approval Model](/docs/architecture/approval-model/) for the full three-tier design and `input.trust_tier` reference.

@@ -1,0 +1,207 @@
+---
+title: First Real Request — AWS
+description: Walk through a complete jitsudo elevation request using a real AWS account, from IAM setup to credential use.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide extends the [Quickstart](/docs/quickstart/) to use a real AWS account instead of the mock provider. By the end you will have submitted, approved, and executed against a live AWS role.
+
+<Aside type="note">
+This guide creates a sandbox IAM role with read-only EC2 permissions. No production resources are touched. You will need AWS credentials with IAM permissions to create roles and update trust policies.
+</Aside>
+
+## What You'll Need
+
+- A working jitsudo local environment (from the [Quickstart](/docs/quickstart/))
+- AWS credentials with `iam:CreateRole`, `iam:AttachRolePolicy`, `iam:UpdateAssumeRolePolicy` permissions
+- The AWS CLI installed and configured
+
+## Step 1: Create the Target IAM Role
+
+Create a sandbox role that jitsudod will assume on behalf of approved requesters:
+
+```bash
+# Create the role with a placeholder trust policy
+aws iam create-role \
+  --role-name jitsudo-sandbox-readonly \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": {"AWS": "arn:aws:iam::YOUR_ACCOUNT_ID:root"},
+      "Action": "sts:AssumeRole"
+    }]
+  }' \
+  --description "jitsudo sandbox — read-only EC2 access"
+
+# Attach read-only permissions
+aws iam attach-role-policy \
+  --role-name jitsudo-sandbox-readonly \
+  --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+```
+
+## Step 2: Configure the Trust Policy for jitsudod
+
+jitsudod needs permission to call `sts:AssumeRole` on this role. Update the trust policy to allow the identity that jitsudod runs as:
+
+```bash
+# If jitsudod runs with static credentials (local dev):
+aws iam update-assume-role-policy \
+  --role-name jitsudo-sandbox-readonly \
+  --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::YOUR_ACCOUNT_ID:user/jitsudo-dev"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "jitsudo"
+        }
+      }
+    }]
+  }'
+```
+
+<Aside type="tip">
+In production on EKS, use IRSA (IAM Roles for Service Accounts) instead of static credentials. The trust policy would use `Federated` with the OIDC provider ARN. See the [AWS Provider guide](/docs/guides/providers/aws/) for the IRSA setup.
+</Aside>
+
+## Step 3: Grant jitsudod the iam:PutRolePolicy Permission
+
+jitsudo needs `iam:PutRolePolicy` on the target role to implement early revocation (it attaches a deny policy on explicit revoke):
+
+```bash
+# Attach an inline policy to jitsudod's IAM user/role
+aws iam put-user-policy \
+  --user-name jitsudo-dev \
+  --policy-name jitsudo-revocation \
+  --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "iam:PutRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::YOUR_ACCOUNT_ID:role/jitsudo-sandbox-readonly"
+    }]
+  }'
+```
+
+## Step 4: Configure jitsudod for AWS
+
+Add the AWS provider configuration to your `jitsudod.yaml`:
+
+```yaml
+providers:
+  aws:
+    mode: sts_assume_role
+    role_arn_template: "arn:aws:iam::{scope}:role/jitsudo-{role}"
+    default_region: us-east-1
+    credentials_source: static   # or: instance_profile, irsa
+```
+
+With the template above:
+- A request for `role: sandbox-readonly` in `scope: YOUR_ACCOUNT_ID` maps to `arn:aws:iam::YOUR_ACCOUNT_ID:role/jitsudo-sandbox-readonly`
+
+Restart jitsudod with `make docker-up` (or your equivalent).
+
+## Step 5: Apply an Eligibility Policy
+
+```bash
+cat > aws-eligibility.rego << 'EOF'
+package jitsudo.eligibility
+
+import future.keywords.if
+
+default allow = false
+default reason = "not authorized"
+
+allow if {
+    input.user.groups[_] == "sre"
+    input.request.provider == "aws"
+    input.request.role == "sandbox-readonly"
+    input.request.duration_seconds <= 3600
+}
+
+reason = "allowed" if { allow }
+EOF
+
+jitsudo policy apply -f aws-eligibility.rego --type eligibility --name aws-sandbox-eligibility
+```
+
+## Step 6: Submit a Real AWS Request
+
+```bash
+jitsudo request \
+  --provider aws \
+  --role sandbox-readonly \
+  --scope YOUR_ACCOUNT_ID \
+  --duration 30m \
+  --reason "Testing real AWS provider - sandbox"
+```
+
+You should see:
+```
+✓ Request submitted (ID: req_01...)
+⏳ Awaiting approval
+```
+
+## Step 7: Approve the Request
+
+In a second terminal:
+
+```bash
+jitsudo approve req_01...
+```
+
+## Step 8: Execute with Real AWS Credentials
+
+```bash
+# List EC2 instances in us-east-1 using the elevated credentials
+jitsudo exec req_01... -- aws ec2 describe-instances --region us-east-1
+```
+
+The `exec` command injects `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, and `AWS_DEFAULT_REGION` into the subprocess. These are real STS temporary credentials from `sts:AssumeRole`.
+
+## Step 9: Verify the Audit Log
+
+```bash
+jitsudo audit --request req_01...
+```
+
+You should see entries for `request.created`, `request.approved`, `grant.issued`. After the TTL expires, `grant.expired` will appear.
+
+## Step 10: Test Early Revocation
+
+```bash
+jitsudo revoke req_01...
+```
+
+This calls `iam:PutRolePolicy` on `jitsudo-sandbox-readonly`, attaching a deny policy with a `DateLessThanEquals` condition that immediately invalidates the STS session.
+
+Verify revocation:
+
+```bash
+jitsudo exec req_01... -- aws ec2 describe-instances --region us-east-1
+# Should fail: ExpiredTokenException or AccessDeniedException
+```
+
+## Cleanup
+
+```bash
+aws iam detach-role-policy \
+  --role-name jitsudo-sandbox-readonly \
+  --policy-arn arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+
+aws iam delete-role --role-name jitsudo-sandbox-readonly
+```
+
+## Next Steps
+
+- See the full [AWS Provider guide](/docs/guides/providers/aws/) for production configuration, including IRSA, IAM Identity Center mode, session tagging, and duration limits
+- See [Security Hardening](/docs/guides/security-hardening/) before deploying to production

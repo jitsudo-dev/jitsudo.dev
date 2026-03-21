@@ -195,6 +195,51 @@ since=2026-03-01T00:00:00Z" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
+## Tamper-Evidence: What the Hash Chain Guarantees
+
+The SHA-256 hash chain means that **any modification to a historical entry — including the `prev_hash` field — will break all subsequent hashes**. An attacker cannot silently edit or delete an audit record without the discrepancy being detectable by the verification script.
+
+What the hash chain does **not** provide:
+- **Truncation protection**: An attacker with database write access could truncate the table (delete all rows). The chain would verify as intact on the remaining entries, but entries would be missing. Pair with row count monitoring or an external log drain for truncation detection.
+- **WORM (write-once) storage**: PostgreSQL tables are not inherently write-once. The `REVOKE UPDATE, DELETE ON audit_events` permission (see [Security Hardening](/docs/guides/security-hardening/)) provides a second layer of protection, but a database superuser could still bypass it.
+- **Cryptographic anchoring**: There is no external timestamp authority or blockchain anchor for the chain. For regulatory or legal evidence requirements, export and archive signed snapshots externally.
+
+For stronger audit integrity guarantees, forward the audit log to an external SIEM or write-once log store.
+
+## SIEM Integration
+
+### JSON export
+
+The simplest integration is periodic export via the CLI or REST API:
+
+```bash
+# Export all events since last export as JSON
+jitsudo audit \
+  --since 2026-03-01T00:00:00Z \
+  --output json > audit-2026-03.json
+
+# Stream continuously (future: Milestone 4 webhook)
+```
+
+The JSON output matches the `AuditEvent` schema above and can be ingested by any SIEM that accepts JSON logs (Splunk, Datadog, Elastic, etc.).
+
+### REST API polling
+
+For automated SIEM ingestion today, poll the REST API on a schedule:
+
+```bash
+# Fetch events since a cursor timestamp
+curl "https://jitsudo.example.com/api/v1alpha1/audit?\
+since=${LAST_SYNC_TIMESTAMP}&output=json" \
+  -H "Authorization: Bearer $TOKEN" \
+  | jq '.events[]' \
+  | your-siem-ingest-script
+```
+
+### Dedicated SIEM connectors (Milestone 4)
+
+Native connectors for Splunk, Datadog, and Elastic — with real-time forwarding and verified delivery — are on the [Milestone 4 roadmap](/roadmap/).
+
 See the [REST API reference](/reference/api/) for query parameters and response schema.
 
 ## Append-Only Guarantee

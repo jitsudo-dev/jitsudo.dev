@@ -8,34 +8,41 @@ jitsudo follows the same architectural principles as Kubernetes: a versioned API
 ## Components
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     jitsudo CLI                             │
-│           (Go, distributed as a single binary)              │
-└──────────────────────┬──────────────────────────────────────┘
-                       │ gRPC / REST (mTLS)
-┌──────────────────────▼──────────────────────────────────────┐
-│                jitsudod Control Plane                       │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ Auth/OIDC   │  │ Policy Engine│  │  Request Manager  │  │
-│  │ (SSO bridge)│  │    (OPA)     │  │  (state machine)  │  │
-│  └─────────────┘  └──────────────┘  └───────────────────┘  │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Provider Adapter Layer                 │    │
-│  │   [AWS]    [Azure]    [GCP]    [Kubernetes]         │    │
-│  └─────────────────────────────────────────────────────┘    │
-│  ┌──────────────┐  ┌──────────────────────────────────┐     │
-│  │  Audit Log   │  │   Notification Dispatcher        │     │
-│  │ (append-only)│  │  (Slack / email / webhook)       │     │
-│  └──────────────┘  └──────────────────────────────────┘     │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │                  PostgreSQL                          │   │
-│  └──────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
+REQUESTORS                              APPROVERS (Milestone 4)
+──────────                              ────────────────────────
+jitsudo CLI ──┐                         OPA (Tier 1, auto)
+              │                         AI agent via MCP (Tier 2)
+MCP server ───┤── gRPC / REST (mTLS) ──▶ Human via Slack/CLI (Tier 3)
+  (requestor) │
+Slack bot ────┘
+
+┌──────────────────────────────────────────────────────────────┐
+│                  jitsudod Control Plane                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────────┐  │
+│  │ Auth/OIDC   │  │ Policy Engine│  │  Request Manager   │  │
+│  │ (SSO bridge)│  │ (OPA) + Tier │  │  (state machine +  │  │
+│  │             │  │   Router     │  │   approval routing)│  │
+│  └─────────────┘  └──────────────┘  └────────────────────┘  │
+│  ┌─────────────────────────────────────────────────────┐     │
+│  │              Provider Adapter Layer                 │     │
+│  │   [AWS]    [Azure]    [GCP]    [Kubernetes]         │     │
+│  └─────────────────────────────────────────────────────┘     │
+│  ┌──────────────┐  ┌──────────────────────────────────┐      │
+│  │  Audit Log   │  │   Notification Dispatcher        │      │
+│  │ (SHA-256     │  │  (Slack / email / webhook)       │      │
+│  │  hash chain) │  │                                  │      │
+│  └──────────────┘  └──────────────────────────────────┘      │
+│  ┌───────────────────────────────────────────────────────┐   │
+│  │                     PostgreSQL                        │   │
+│  └───────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────┘
                        │
         ┌──────────────┼──────────────┬──────────────┐
         ▼              ▼              ▼              ▼
     AWS IAM         Azure RBAC     GCP IAM      K8s RBAC
 ```
+
+The MCP server serves two distinct roles: as a **requestor** (agents submit elevation requests on their own behalf) and as an **approver** (AI agents evaluate pending requests and approve, deny, or escalate). See [Approval Model](/docs/architecture/approval-model/) for the full design and risk asymmetry between these roles.
 
 ## Kubernetes Analogy
 

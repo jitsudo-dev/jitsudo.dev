@@ -5,6 +5,15 @@ description: Set up jitsudo to grant temporary elevated access on Kubernetes via
 
 The Kubernetes provider grants temporary elevated access by creating a `ClusterRoleBinding` or `RoleBinding` with a TTL annotation. The jitsudo expiry sweeper deletes bindings when they expire.
 
+:::tip[Prerequisites at a glance]
+Before configuring the Kubernetes provider, jitsudod's ServiceAccount needs RBAC permission to:
+- `create`, `get`, `delete` `ClusterRoleBindings` and `RoleBindings`
+- `list`, `watch` `ClusterRoleBindings` and `RoleBindings` (for expiry sweeper)
+- The target `ClusterRoles` being granted must already exist in the cluster
+
+The Helm chart creates the necessary RBAC resources automatically when the Kubernetes provider is enabled. See [Prerequisites](#prerequisites) below.
+:::
+
 ## How It Works
 
 1. jitsudod creates a `ClusterRoleBinding` (cluster-wide) or `RoleBinding` (namespaced) binding the requester's user identity to the requested ClusterRole.
