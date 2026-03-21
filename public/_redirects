@@ -1,0 +1,3 @@
+# Redirect /docs and /docs/ to the first docs page
+/docs   /docs/what-is-jitsudo/   301
+/docs/  /docs/what-is-jitsudo/   301
