@@ -1,6 +1,3 @@
-# Redirect /docs and /docs/ to the first docs page
+# Redirect bare /docs to the first docs page
 /docs   /docs/what-is-jitsudo/   301
 /docs/  /docs/what-is-jitsudo/   301
-
-# Fix double-prefix caused by docs.jitsudo.dev path-forwarding rule
-/docs/docs/*  /docs/:splat  301
