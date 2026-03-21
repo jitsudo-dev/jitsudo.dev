@@ -15,7 +15,7 @@ Deploy jitsudo to Kubernetes using the official Helm chart. The chart includes a
 ## Add the Helm Repository
 
 :::note
-The chart is currently distributed from the main repository. A dedicated Helm repository will be published in Milestone 4.
+The chart is currently distributed from the main repository. A dedicated Helm repository will be published in Milestone 5.
 :::
 
 ```bash

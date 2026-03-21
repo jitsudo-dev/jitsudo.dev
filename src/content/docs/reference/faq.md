@@ -125,6 +125,6 @@ jitsudo has completed [Milestone 3](/roadmap/), which includes:
 What is not yet production-ready (and should be on your radar):
 - **Auto-approval (Tier 1 and Tier 2)**: planned for Milestone 4
 - **Formal HA engineering**: run multiple instances today; HPA/PDB documentation in Milestone 4
-- **SIEM connectors**: JSON export available now; dedicated Splunk/Datadog connectors in Milestone 4
+- **SIEM connectors**: JSON export available now; dedicated Splunk/Datadog connectors in Milestone 6
 
 Teams evaluating jitsudo for production should read the [Security Hardening Guide](/docs/guides/security-hardening/) and the [HA and Disaster Recovery](/docs/guides/ha-dr/) page before deploying.

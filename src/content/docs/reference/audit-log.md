@@ -236,9 +236,9 @@ since=${LAST_SYNC_TIMESTAMP}&output=json" \
   | your-siem-ingest-script
 ```
 
-### Dedicated SIEM connectors (Milestone 4)
+### Dedicated SIEM connectors (Milestone 6)
 
-Native connectors for Splunk, Datadog, and Elastic — with real-time forwarding and verified delivery — are on the [Milestone 4 roadmap](/roadmap/).
+Native connectors for Splunk, Datadog, and Elastic — with real-time forwarding and verified delivery — are on the [Milestone 6 roadmap](/roadmap/).
 
 See the [REST API reference](/reference/api/) for query parameters and response schema.
 
