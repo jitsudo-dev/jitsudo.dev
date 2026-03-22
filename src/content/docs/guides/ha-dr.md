@@ -7,7 +7,7 @@ import { Aside } from '@astrojs/starlight/components';
 
 ## Architecture Overview
 
-jitsudod is a **stateless binary** — all persistent state lives in PostgreSQL. This has an important implication: you can run multiple jitsudod instances behind a load balancer today, sharing the same database, without any additional configuration.
+jitsudod is a **stateless binary** — all persistent state lives in PostgreSQL. This has an important implication: you can run multiple jitsudod instances behind a load balancer, sharing the same database, without any additional coordination infrastructure.
 
 ```
 Internal Load Balancer (private, not internet-facing)
@@ -22,7 +22,9 @@ jitsudod-1  jitsudod-2   (multiple instances, same image)
     (single source of truth for all state)
 ```
 
-PostgreSQL advisory locks ensure that background jobs (the expiry sweeper, policy sync) run on exactly one instance at a time — no external leader election mechanism is needed.
+**Expiry sweeper coordination** — A PostgreSQL session-level advisory lock (`pg_try_advisory_lock`) ensures that only one jitsudod instance runs the expiry sweeper at a time. Because `provider.Revoke()` is called before the database state transition, without this lock multiple instances could issue duplicate revoke calls for the same grant. The winning instance acquires the lock, runs the sweep, then releases it; other instances skip that tick.
+
+**Policy sync** — Each instance independently polls the database every 30 seconds and reloads its in-memory OPA query cache. This means policy changes applied via `ApplyPolicy` or `DeletePolicy` propagate to all replicas within one sync interval without any fan-out coordination.
 
 ## Failure Modes
 
@@ -68,18 +70,40 @@ Persistent out-of-band access events are audit gaps. Minimize them by monitoring
 
 ### Run multiple instances
 
-```yaml
-# helm/values.yaml
-replicaCount: 2   # minimum for HA; 3 recommended for rolling updates without downtime
+Use the bundled `values-ha.yaml` overlay to enable HA mode in a single command:
 
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
+```bash
+helm upgrade --install jitsudo ./helm/jitsudo \
+  --namespace jitsudo \
+  --create-namespace \
+  -f helm/jitsudo/values-ha.yaml \
+  --set config.auth.oidcIssuer=https://your-idp.example.com \
+  --set config.auth.clientId=jitsudo-server
+```
+
+The HA overlay enables:
+- **2 replicas** by default (minimum for HA; HPA scales up from there)
+- **HPA** — scales on CPU (70%) and memory (80%), up to 10 replicas
+- **PodDisruptionBudget** — ensures at least 1 pod remains available during node drains
+- **Pod anti-affinity** — prefers scheduling pods on different nodes
+- **PostgreSQL read replica** — one streaming replica for the bundled subchart (see note below)
+
+For full production deployments, also supply an external managed database and disable the bundled subchart:
+
+```yaml
+# In your environment-specific values file
+postgresql:
+  enabled: false
+config:
+  database:
+    existingSecret: "jitsudo-db"   # Secret with DATABASE_URL key
 ```
 
 ### Use a managed PostgreSQL service
 
-Self-managed PostgreSQL HA is operationally complex. Use a managed service for production:
+The bundled PostgreSQL subchart (`values-ha.yaml` adds one read replica via streaming replication) is suitable for testing HA configuration. It does **not** provide automatic failover — if the primary crashes, manual intervention is required.
+
+For production, use a managed service with built-in automatic failover:
 
 | Cloud | Managed PostgreSQL |
 |-------|--------------------|
@@ -151,11 +175,3 @@ jitsudo audit verify
 ```
 
 If the chain breaks, entries were modified or inserted out-of-band between the backup point and the restore point. Investigate before allowing the restored instance to serve traffic. See [Audit Log](/docs/reference/audit-log/) for the chain format and verification script.
-
-## Milestone 4 HA Improvements
-
-The following formal HA engineering is planned for [Milestone 4](/roadmap/):
-- HPA (Horizontal Pod Autoscaler) configuration for automatic scaling
-- PodDisruptionBudget documentation and Helm defaults
-- Documented PostgreSQL replication topology recommendations per cloud provider
-- Active/passive failover testing runbook

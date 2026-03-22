@@ -114,6 +114,30 @@ podDisruptionBudget:
   minAvailable: 1
 ```
 
+## HA Deployment
+
+For production high-availability, apply the bundled `values-ha.yaml` overlay. It enables 2 replicas, HPA (CPU + memory), PodDisruptionBudget, pod anti-affinity, and a PostgreSQL streaming read replica:
+
+```bash
+helm upgrade --install jitsudo ./helm/jitsudo \
+  --namespace jitsudo \
+  --create-namespace \
+  -f helm/jitsudo/values-ha.yaml \
+  --set config.auth.oidcIssuer=https://your-idp.example.com \
+  --set config.auth.clientId=jitsudo-server
+```
+
+For full production deployments, combine with an external managed database and your own values file:
+
+```bash
+helm upgrade --install jitsudo ./helm/jitsudo \
+  --namespace jitsudo \
+  -f helm/jitsudo/values-ha.yaml \
+  --values values-prod.yaml
+```
+
+See the [High Availability & DR guide](/guides/ha-dr/) for managed PostgreSQL options, connection pooling, and failure mode analysis.
+
 ## Key Values Reference
 
 ### `config` section
