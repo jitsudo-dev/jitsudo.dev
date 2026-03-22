@@ -8,7 +8,7 @@ jitsudo follows the same architectural principles as Kubernetes: a versioned API
 ## Components
 
 ```
-REQUESTORS                              APPROVERS (Milestone 4)
+REQUESTORS                              APPROVERS
 ──────────                              ────────────────────────
 jitsudo CLI ──┐                         OPA (Tier 1, auto)
               │                         AI agent via MCP (Tier 2)

@@ -79,9 +79,7 @@ For emergency access when the control plane is unavailable, engineers must use t
 
 **Yes, today.** jitsudod is stateless — all state lives in PostgreSQL. You can run multiple instances behind an internal load balancer, sharing the same database, right now. PostgreSQL advisory locks handle leader election for background jobs.
 
-Formal HA engineering with HPA, PodDisruptionBudget, and documented PostgreSQL replication topology is on the [Milestone 4 roadmap](/roadmap/).
-
-See [HA and Disaster Recovery](/docs/guides/ha-dr/) for current deployment guidance.
+See [HA and Disaster Recovery](/docs/guides/ha-dr/) for the full deployment guide, including HPA, PodDisruptionBudget, and PostgreSQL replication topology.
 
 ---
 
@@ -113,7 +111,7 @@ See [Approval Model](/docs/architecture/approval-model/) for the full design and
 
 **Yes — as requestors, today.** The MCP server interface lets AI agents submit elevation requests on their own behalf, subject to the same OPA eligibility and approval workflow as human users. An agent can only submit a request — a human or policy still gates the grant.
 
-**As approvers, now.** The MCP approver interface (available as of Milestone 4) allows an AI agent to evaluate pending requests against contextual signals (linked incident tickets, trust history, blast radius) and approve, deny, or escalate to a human with a recommendation. The AI approver always escalates on uncertainty — it cannot silently auto-approve on model error. Every decision is stored with the model's full reasoning in the tamper-evident audit log.
+**As approvers, now.** The MCP approver interface allows an AI agent to evaluate pending requests against contextual signals (linked incident tickets, trust history, blast radius) and approve, deny, or escalate to a human with a recommendation. The AI approver always escalates on uncertainty — it cannot silently auto-approve on model error. Every decision is stored with the model's full reasoning in the tamper-evident audit log.
 
 Configure the MCP approver by setting `MCPToken` and `MCPAgentIdentity` in the jitsudod config, then point your AI agent to `POST /mcp`. The endpoint uses Bearer token auth (not OIDC) to accommodate AI agents that cannot perform the device authorization flow.
 
@@ -131,16 +129,14 @@ See [How jitsudo Compares](/docs/guides/comparison/) for a full side-by-side ana
 
 ### Is jitsudo production-ready?
 
-jitsudo has completed [Milestone 3](/roadmap/), which includes:
+jitsudo is ready for production pilots. Shipped capabilities include:
 - Full provider coverage (AWS, Azure, GCP, Kubernetes)
-- Production deployment options (Helm chart, single-server bootstrap)
-- mTLS for gRPC
-- Integration test suite
-- Comprehensive documentation
+- Production deployment options (Helm chart with HA overlay, single-server bootstrap)
+- Three-tier approval model (OPA auto-approve, AI-assisted review, human approval)
+- mTLS, Security Hardening Guide, and HA/DR documentation
+- Tamper-evident audit log with SIEM export (JSON streaming, syslog forwarding, REST API)
 
-What is not yet production-ready (and should be on your radar):
-- **Formal HA engineering**: run multiple instances today; HPA/PDB documentation in Milestone 4
-- **Generic webhook and syslog notifications**: planned for Milestone 4
-- **SIEM connectors**: JSON export available now; dedicated Splunk/Datadog connectors in Milestone 6
+What to keep on your radar:
+- **Dedicated SIEM connectors**: JSON export is available now; native Splunk/Datadog connectors are planned for a future release
 
 Teams evaluating jitsudo for production should read the [Security Hardening Guide](/docs/guides/security-hardening/) and the [HA and Disaster Recovery](/docs/guides/ha-dr/) page before deploying.
