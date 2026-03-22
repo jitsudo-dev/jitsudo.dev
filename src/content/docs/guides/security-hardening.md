@@ -50,7 +50,8 @@ Outbound from jitsudod:
 - Allow HTTPS to cloud provider APIs (AWS STS, Azure ARM, GCP IAM, Kubernetes API)
 - Allow TCP 5432 to PostgreSQL
 - Allow HTTPS to IdP JWKS endpoint (for token verification)
-- Allow HTTPS to Slack/webhook endpoints (for notifications)
+- Allow HTTPS to Slack/webhook/SIEM HTTP endpoints (for notifications)
+- Allow TCP/UDP to syslog server (if using syslog SIEM forwarding)
 
 ## TLS and mTLS
 
@@ -159,11 +160,13 @@ export GOOGLE_APPLICATION_CREDENTIALS="/var/secrets/gcp-sa-key.json"
 
 ### Notification secrets
 
-Slack webhook URLs and SMTP passwords should also be set via environment variables:
+Slack webhook URLs, SMTP passwords, and SIEM tokens should be set via environment variables rather than the config file:
 
 ```bash
-export JITSUDOD_NOTIFICATIONS_SLACK_WEBHOOK_URL="https://hooks.slack.com/..."
-export JITSUDOD_NOTIFICATIONS_EMAIL_SMTP_PASSWORD="..."
+export JITSUDOD_SLACK_WEBHOOK_URL="https://hooks.slack.com/..."
+export JITSUDOD_SMTP_PASSWORD="..."
+export JITSUDOD_SIEM_JSON_URL="https://siem.example.com/api/v1/ingest"
+export JITSUDOD_SIEM_SYSLOG_ADDRESS="syslog.example.com:514"
 ```
 
 ## Audit Log Integrity

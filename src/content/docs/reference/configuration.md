@@ -283,6 +283,85 @@ notifications:
       events: ["break_glass", "approved"]
 ```
 
+#### `notifications.siem`
+
+Real-time SIEM integration. Events are forwarded as they occur, independent of the audit log. The `siem` block has two optional sub-sections; configure either or both.
+
+##### `notifications.siem.json`
+
+POSTs each event as a self-contained JSON document to an HTTP ingest endpoint (Splunk HEC, Elasticsearch, Datadog Logs, or any compatible receiver). Richer than the generic webhook: includes a `source`, `schema_version`, and a per-event UUID (`event_id`) for deduplication.
+
+| Field | YAML key | Env var | Default | Description |
+|-------|----------|---------|---------|-------------|
+| URL | `notifications.siem.json.url` | `JITSUDOD_SIEM_JSON_URL` | — | HTTP(S) ingest endpoint |
+| Headers | `notifications.siem.json.headers` | — | `{}` | Custom HTTP headers (e.g. `Authorization: Bearer <token>`) |
+| Events | `notifications.siem.json.events` | — | `[]` (all) | Allowlist of event types to forward. Empty means all events |
+
+**Payload fields** (superset of the generic webhook payload):
+
+```json
+{
+  "source": "jitsudo",
+  "schema_version": "1",
+  "event_id": "550e8400-e29b-41d4-a716-446655440000",
+  "type": "approved",
+  "request_id": "01JF4...",
+  "actor": "approver@example.com",
+  "provider": "aws",
+  "role": "ReadOnly",
+  "scope": "123456789012",
+  "reason": "incident investigation",
+  "expires_at": "2025-01-15T18:00:00Z",
+  "timestamp": "2025-01-15T17:00:00Z"
+}
+```
+
+`event_id` is a UUID v4 generated per-event and is unique across all deliveries, making it safe to use as a deduplication key in idempotent SIEM ingest pipelines. `expires_at` is omitted when not applicable.
+
+##### `notifications.siem.syslog`
+
+Forwards events via the syslog protocol to a remote syslog server or the local Unix socket. Messages use a structured `key=value` format parseable by any SIEM that consumes syslog (rsyslog, syslog-ng, Splunk Universal Forwarder, etc.).
+
+| Field | YAML key | Env var | Default | Description |
+|-------|----------|---------|---------|-------------|
+| Network | `notifications.siem.syslog.network` | — | `""` | `"tcp"`, `"udp"`, or `""` for the local Unix socket |
+| Address | `notifications.siem.syslog.address` | `JITSUDOD_SIEM_SYSLOG_ADDRESS` | `""` | `"host:port"` for a remote server; empty uses the OS default local socket |
+| Tag | `notifications.siem.syslog.tag` | — | `"jitsudo"` | Syslog process identifier |
+| Facility | `notifications.siem.syslog.facility` | — | `"auth"` | Syslog facility: `"auth"`, `"daemon"`, or `"local0"`–`"local7"` |
+
+**Severity mapping:**
+
+| Event type | Syslog severity |
+|-----------|----------------|
+| `break_glass` | `WARNING` |
+| `denied`, `ai_denied` | `NOTICE` |
+| All others | `INFO` |
+
+**Message format** (structured `key=value`, space-separated):
+
+```
+type=approved request_id=01JF4... actor=alice@example.com provider=aws role=ReadOnly scope=123456789012 reason="incident investigation" expires_at=2025-01-15T18:00:00Z
+```
+
+:::note
+`log/syslog` is not available on Windows. The syslog notifier is a no-op on Windows builds; use the JSON notifier for cross-platform deployments.
+:::
+
+```yaml
+notifications:
+  siem:
+    json:
+      url: "https://siem.example.com/api/v1/ingest"
+      events: []         # empty = all events
+      headers:
+        Authorization: "Bearer <token>"
+    syslog:
+      network: "tcp"
+      address: "syslog.example.com:514"
+      tag: "jitsudo"
+      facility: "auth"
+```
+
 ---
 
 ### `mcp`

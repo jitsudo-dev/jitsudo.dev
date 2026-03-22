@@ -208,24 +208,54 @@ For stronger audit integrity guarantees, forward the audit log to an external SI
 
 ## SIEM Integration
 
-### JSON export
+jitsudo provides two real-time SIEM forwarding mechanisms built into the notification dispatcher, plus the existing periodic export path.
 
-The simplest integration is periodic export via the CLI or REST API:
+### Real-time JSON streaming
+
+Configure `notifications.siem.json` to POST each event as a JSON document to any HTTP ingest endpoint (Splunk HEC, Elasticsearch, Datadog Logs, etc.) the moment it occurs:
+
+```yaml
+notifications:
+  siem:
+    json:
+      url: "https://siem.example.com/api/v1/ingest"
+      headers:
+        Authorization: "Bearer <token>"
+```
+
+Each POST includes a UUID `event_id` for deduplication, making it safe to use with idempotent SIEM ingest pipelines. See [Server Configuration](/reference/configuration/#notificationssiem) for the full payload schema and field reference.
+
+### Real-time syslog forwarding
+
+Configure `notifications.siem.syslog` to forward events to a remote syslog server or the local syslog socket:
+
+```yaml
+notifications:
+  siem:
+    syslog:
+      network: "tcp"
+      address: "syslog.example.com:514"
+      facility: "auth"
+```
+
+Messages use structured `key=value` format and severity is mapped by event type (`break_glass` → WARNING, `denied`/`ai_denied` → NOTICE, others → INFO).
+
+### Periodic export (batch)
+
+For batch SIEM ingestion, export via the CLI or REST API:
 
 ```bash
 # Export all events since last export as JSON
 jitsudo audit \
   --since 2026-03-01T00:00:00Z \
   --output json > audit-2026-03.json
-
-# Stream continuously (future: Milestone 4 webhook)
 ```
 
-The JSON output matches the `AuditEvent` schema above and can be ingested by any SIEM that accepts JSON logs (Splunk, Datadog, Elastic, etc.).
+The JSON output matches the `AuditEvent` schema above.
 
 ### REST API polling
 
-For automated SIEM ingestion today, poll the REST API on a schedule:
+For automated batch ingestion, poll the REST API on a schedule:
 
 ```bash
 # Fetch events since a cursor timestamp
@@ -238,7 +268,7 @@ since=${LAST_SYNC_TIMESTAMP}&output=json" \
 
 ### Dedicated SIEM connectors (Milestone 6)
 
-Native connectors for Splunk, Datadog, and Elastic — with real-time forwarding and verified delivery — are on the [Milestone 6 roadmap](/roadmap/).
+Native connectors for Splunk, Datadog, and Elastic — with verified delivery guarantees and native field mapping — are on the [Milestone 6 roadmap](/roadmap/).
 
 See the [REST API reference](/reference/api/) for query parameters and response schema.
 
