@@ -229,6 +229,27 @@ notifications:
 
 ---
 
+### `mcp`
+
+Configuration for the MCP approver endpoint (`POST /mcp`). The endpoint is disabled when `token` is empty.
+
+| Field | YAML key | Env var | Default | Description |
+|-------|----------|---------|---------|-------------|
+| Token | `mcp.token` | `JITSUDOD_MCP_TOKEN` | `""` | Bearer token AI agents must present. Empty = endpoint returns 404 (disabled). Generate with `openssl rand -hex 32`. |
+| Agent identity | `mcp.agent_identity` | `JITSUDOD_MCP_AGENT_IDENTITY` | `"mcp-agent"` | Name recorded in the audit log for every AI approval decision. Use a descriptive name per deployment. |
+
+```yaml
+mcp:
+  token: ""           # supply via JITSUDOD_MCP_TOKEN — never commit this value
+  agent_identity: "claude-approver-prod"
+```
+
+:::tip
+Always supply `mcp.token` via the `JITSUDOD_MCP_TOKEN` environment variable or a Kubernetes Secret — not inline in the config file. The token grants approval authority over elevation requests.
+:::
+
+---
+
 ### `log`
 
 | Field | YAML key | Env var | Default | Description |

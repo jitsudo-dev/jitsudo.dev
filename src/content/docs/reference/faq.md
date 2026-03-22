@@ -89,17 +89,33 @@ See [HA and Disaster Recovery](/docs/guides/ha-dr/) for current deployment guida
 
 ### Does jitsudo support auto-approval today?
 
-**Not yet.** The current release implements **Tier 3 (human approval)** and **break-glass** emergency access. Policy-driven auto-approval (Tier 1) and AI-assisted review (Tier 2) are planned for [Milestone 4](/roadmap/).
+**Yes.** When an OPA approval policy returns `approver_tier := "auto"`, the request is approved and credentials issued synchronously during `CreateRequest` — no human action required.
 
-The three-tier approval model is the locked architectural target — the design is complete, the implementation is scheduled.
+When an OPA approval policy returns `approver_tier := "ai_review"`, the request sits PENDING and is surfaced to the configured AI agent via the MCP approver interface. The agent calls `approve_request`, `deny_request`, or `escalate_to_human` — with the reasoning stored in the tamper-evident audit log.
 
-See [Approval Model](/docs/architecture/approval-model/) for the design spec.
+```rego
+package jitsudo.approval
+import rego.v1
+
+default approver_tier := "human"
+
+# Auto-approve read-only requests from the SRE team, up to 1 hour
+approver_tier := "auto" if {
+    input.user.groups[_] == "sre-team"
+    endswith(input.request.role, "-readonly")
+    input.request.duration_seconds <= 3600
+}
+```
+
+See [Approval Model](/docs/architecture/approval-model/) for the full design and [Writing Policies](/docs/guides/writing-policies/) for more examples.
 
 ### Can AI agents use jitsudo?
 
 **Yes — as requestors, today.** The MCP server interface lets AI agents submit elevation requests on their own behalf, subject to the same OPA eligibility and approval workflow as human users. An agent can only submit a request — a human or policy still gates the grant.
 
-**As approvers, in Milestone 4.** The MCP approver interface will allow an AI agent to evaluate pending requests against contextual signals (linked incident tickets, trust history, blast radius) and approve, deny, or escalate to a human with a recommendation. The AI approver always fails to human escalation on uncertainty — it cannot silently auto-approve on model error.
+**As approvers, now.** The MCP approver interface (available as of Milestone 4) allows an AI agent to evaluate pending requests against contextual signals (linked incident tickets, trust history, blast radius) and approve, deny, or escalate to a human with a recommendation. The AI approver always escalates on uncertainty — it cannot silently auto-approve on model error. Every decision is stored with the model's full reasoning in the tamper-evident audit log.
+
+Configure the MCP approver by setting `MCPToken` and `MCPAgentIdentity` in the jitsudod config, then point your AI agent to `POST /mcp`. The endpoint uses Bearer token auth (not OIDC) to accommodate AI agents that cannot perform the device authorization flow.
 
 ### How does jitsudo compare to AWS IAM Identity Center / Azure PIM / GCP PAM?
 
@@ -123,8 +139,8 @@ jitsudo has completed [Milestone 3](/roadmap/), which includes:
 - Comprehensive documentation
 
 What is not yet production-ready (and should be on your radar):
-- **Auto-approval (Tier 1 and Tier 2)**: planned for Milestone 4
 - **Formal HA engineering**: run multiple instances today; HPA/PDB documentation in Milestone 4
+- **Generic webhook and syslog notifications**: planned for Milestone 4
 - **SIEM connectors**: JSON export available now; dedicated Splunk/Datadog connectors in Milestone 6
 
 Teams evaluating jitsudo for production should read the [Security Hardening Guide](/docs/guides/security-hardening/) and the [HA and Disaster Recovery](/docs/guides/ha-dr/) page before deploying.

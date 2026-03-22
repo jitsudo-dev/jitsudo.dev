@@ -23,6 +23,9 @@ All policy types receive the same input document. The structure is stable across
     "reason": "Investigating P1 ECS crash — INC-4421",
     "break_glass": false,
     "metadata": {}
+  },
+  "context": {
+    "trust_tier": 2
   }
 }
 ```
@@ -33,6 +36,12 @@ All policy types receive the same input document. The structure is stable across
 |-------|------|--------|-------------|
 | `user.email` | string | OIDC `email` claim | The requester's email address. Used as the primary identity in audit logs and bindings. |
 | `user.groups` | string[] | OIDC `groups` claim | Group memberships from the IdP token. Empty if the IdP does not include a `groups` claim. |
+
+### `context` object
+
+| Field | Type | Source | Description |
+|-------|------|--------|-------------|
+| `context.trust_tier` | number (0–4) | `principals` table | The requester's trust tier. `0` = unknown/unverified; `4` = highest trust. Automatically fetched from the database at policy evaluation time; returns `0` for principals with no recorded tier. Use this to gate Tier 1 auto-approval or adjust scope limits. |
 
 ### `request` object
 
@@ -81,10 +90,12 @@ Package: `jitsudo.approval`
 |----------------|------|---------|-------------|
 | `allow` | boolean | `false` | Whether the request is approvable by the actor |
 | `reason` | string | `""` | Explanation if not approvable |
+| `approver_tier` | string | `"human"` | Approval routing: `"auto"` (Tier 1), `"ai_review"` (Tier 2), or `"human"` (Tier 3). Evaluated at `CreateRequest` time to route the request. Policies without this rule default to `"human"`. |
 
 **Evaluation semantics:**
 - All enabled approval policies are evaluated.
 - An approver action succeeds if **any** policy returns `allow = true`.
+- The first non-default `approver_tier` value found wins for routing.
 
 **Minimal policy:**
 

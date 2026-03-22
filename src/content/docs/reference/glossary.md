@@ -6,7 +6,7 @@ description: Definitions of key terms used throughout the jitsudo documentation.
 ## A
 
 **Approval Policy**
-An OPA/Rego policy in the `jitsudo.approval` package that determines how a request is routed: to OPA auto-approval (Tier 1), AI-assisted review (Tier 2), or a human approver (Tier 3). In the current release, approval policies route all requests to Tier 3. See [Writing Policies](/docs/guides/writing-policies/).
+An OPA/Rego policy in the `jitsudo.approval` package that determines how a request is routed: to OPA auto-approval (Tier 1), AI-assisted review (Tier 2), or a human approver (Tier 3). Policies without an `approver_tier` rule default to `"human"`. See [Writing Policies](/docs/guides/writing-policies/).
 
 **Approver**
 The entity that approves an elevation request. Resolved dynamically at request time by the OPA policy engine — not a fixed person or standing role. See [Approval Model](/docs/architecture/approval-model/).
@@ -54,7 +54,7 @@ The control plane daemon (ELv2). Authenticates users, evaluates policies, manage
 ## M
 
 **MCP (Model Context Protocol)**
-An open protocol for AI agents to interact with external tools. jitsudo exposes an MCP server that agents can use to submit elevation requests (today) and approve requests (Milestone 4).
+An open protocol for AI agents to interact with external tools. jitsudo exposes an MCP server with two roles: agents can submit elevation requests on their own behalf (MCP as requestor), and agents can evaluate and decide on pending requests (MCP as approver). See [Approval Model](/docs/architecture/approval-model/).
 
 ## O
 
@@ -90,14 +90,14 @@ The resource boundary within which a role applies. Provider-specific:
 
 **Tier 1 / Tier 2 / Tier 3**
 The three approval tiers in the jitsudo approval model:
-- **Tier 1**: OPA auto-approve (Milestone 4)
-- **Tier 2**: AI-assisted review via MCP (Milestone 4)
-- **Tier 3**: Human approval (available now)
+- **Tier 1**: OPA auto-approve — millisecond approval for low-risk, high-trust requests
+- **Tier 2**: AI-assisted review via MCP — AI agent evaluates context, approves, denies, or escalates with reasoning captured in the audit log
+- **Tier 3**: Human approval — policy-designated approver; receives any request Tier 2 escalates
 
 See [Approval Model](/docs/architecture/approval-model/).
 
 **Trust Tier**
-A numeric value (0–4) assigned to a principal reflecting their identity assurance and access history. Used as `input.trust_tier` in OPA policies to gate auto-approval eligibility. Part of the Milestone 4 trust tier system.
+A numeric value (0–4) assigned to a principal reflecting their identity assurance and access history. Stored in the `principals` table and passed to every OPA policy evaluation as `input.context.trust_tier`. Used by policies to gate Tier 1 auto-approval eligibility and access scope. Administrators set trust tiers via the `SetPrincipalTrustTier` API.
 
 **TTL (Time-To-Live)**
 The duration of an elevation grant. After the TTL expires, the grant moves to the EXPIRED state and the provider revokes the credentials.

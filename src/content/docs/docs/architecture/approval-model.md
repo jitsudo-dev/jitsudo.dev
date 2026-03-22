@@ -3,12 +3,6 @@ title: Approval Model
 description: The three-tier approval architecture, dynamic approver resolution, and MCP dual-role design.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
-
-<Aside type="note" title="Implementation status">
-The three-tier approval model is the target architecture for jitsudo. **Tier 3 (human approval) and break-glass are available now.** Tier 1 (OPA auto-approve) and Tier 2 (AI-assisted review via MCP) are planned for [Milestone 4](/roadmap/).
-</Aside>
-
 ## Dynamic Approver Resolution
 
 A common misconception about approval workflows is that approvers are fixed — a named person, a specific manager, a standing "approver" role. In jitsudo, this is explicitly not the case.
@@ -41,7 +35,6 @@ All approval routing is governed by OPA policy. The policy engine assigns each r
 | Typical use | Read-only scoped operations, high-trust-tier principals, business hours |
 | Example | Trust tier 3+ requesting `s3:GetObject` for 15 minutes during business hours |
 | Policy signal | `approver_tier: "auto"` |
-| **Status** | **Milestone 4** |
 
 Tier 1 makes the "sudo for your cloud" promise real for low-risk workflows. A senior SRE requesting read-only access to an S3 bucket during business hours should not require a human approver — the policy engine can make that call in milliseconds.
 
@@ -57,7 +50,6 @@ Tier 1 makes the "sudo for your cloud" promise real for low-risk workflows. A se
 | AI inputs | Request details, linked incident tickets, principal trust history, blast radius, time context |
 | AI outputs | `approve`, `deny`, or `escalate: {reason, recommendation}` |
 | Failure posture | On uncertainty or model error → **always escalate to Tier 3**, never silently approve or deny |
-| **Status** | **Milestone 4** |
 
 The AI approver reduces approval toil for medium-risk requests by synthesizing context a human approver would need to evaluate manually. It surfaces that context with a recommendation — but a human can always override.
 
@@ -71,7 +63,6 @@ The AI approver reduces approval toil for medium-risk requests by synthesizing c
 | Example | `cluster-admin` on prod Kubernetes, cross-account IAM changes, billing access |
 | Policy signal | `approver_tier: "human"` |
 | Notification | Slack DM + channel alert with full context; AI recommendation if escalated from Tier 2 |
-| **Status** | **Available now** |
 
 ### Break-glass
 
@@ -79,7 +70,7 @@ Break-glass is not a tier — it is an emergency bypass mechanism for situations
 
 ## Tier Routing by OPA Policy
 
-The full Milestone 4 policy schema introduces `approver_tier` as a first-class output of the approval policy:
+Approval policies return `approver_tier` as a first-class output, routing the request to the correct approval path:
 
 ```rego
 package jitsudo.approval
@@ -91,7 +82,7 @@ read_only_roles := {"prod-read-only", "roles/viewer", "view", "s3-readonly"}
 
 # Tier 1: auto-approve for low-risk, high-trust requests
 approver_tier := "auto" if {
-    input.trust_tier >= 3
+    input.context.trust_tier >= 3
     input.request.role in read_only_roles
     time_within_business_hours
     input.request.duration_seconds <= 1800
@@ -151,13 +142,20 @@ Trust tiers quantify how much a principal's identity and history is trusted by t
 | 3 | High-trust principal | Senior SRE, team lead; eligible for Tier 1 auto-approve on low-risk ops |
 | 4 | Break-glass eligible; highest trust | On-call lead, security team; audited separately |
 
-Trust tier assignment is managed by the jitsudo administrator. Tier values are durable per principal and updated on enrollment or role change.
+Trust tier assignment is managed by the jitsudo administrator via the `SetPrincipalTrustTier` API (requires the `jitsudo-admins` group). Tier values are durable per principal, stored in the `principals` table, and updated on enrollment or role change. The trust tier is automatically surfaced as `input.context.trust_tier` in every OPA eligibility and approval evaluation.
+
+```bash
+# Set trust tier for a principal (admin only)
+curl -X PUT https://jitsudod:8080/api/v1alpha1/principals/alice@example.com/trust-tier \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"trust_tier": 3}'
+```
 
 ## MCP Server: Dual Role Architecture
 
 The MCP (Model Context Protocol) server serves two distinct roles in the jitsudo architecture. This distinction matters for both security design and operational configuration.
 
-### MCP as Requestor (available now)
+### MCP as Requestor
 
 An AI agent calls the jitsudo MCP server to submit an elevation request on its own behalf. The agent is the **principal** — it is requesting access, not granting it.
 
@@ -165,7 +163,7 @@ An AI agent calls the jitsudo MCP server to submit an elevation request on its o
 - OPA evaluates eligibility and routes the request through the normal approval workflow
 - A misbehaving agent can only submit a bad *request* — the approval workflow still gates it
 
-### MCP as Approver (Milestone 4)
+### MCP as Approver
 
 An AI agent acts as a **policy-execution and triage layer** between a pending request and a human approver. The agent evaluates the request against contextual signals and emits one of three outcomes: approve, deny, or escalate to human with a recommendation.
 

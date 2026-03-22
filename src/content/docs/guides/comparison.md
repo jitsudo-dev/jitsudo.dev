@@ -97,7 +97,7 @@ In 2026, every infrastructure team is grappling with AI agents that need cloud a
 
 **jitsudo's approach:**
 - **Agents as requestors**: the MCP server interface lets any AI agent request JIT elevation on its own behalf, subject to the same OPA eligibility and approval workflow as humans. A misbehaving agent can only submit a request — the approval workflow still gates it.
-- **Agents as approvers (Milestone 4)**: the MCP approver interface lets an AI agent evaluate pending requests against contextual signals and approve, deny, or escalate. Every AI approval includes the model's reasoning in the audit log. Uncertainty always routes to human escalation.
+- **Agents as approvers**: the MCP approver interface lets an AI agent evaluate pending requests against contextual signals and approve, deny, or escalate. Every AI approval includes the model's reasoning in the audit log. Uncertainty always routes to human escalation.
 
 No existing open source JIT PAM tool was built with AI agents as first-class participants in the access workflow. This is jitsudo's differentiated position.
 

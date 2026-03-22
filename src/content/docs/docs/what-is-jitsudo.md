@@ -64,14 +64,12 @@ Approvers are resolved dynamically by the OPA policy engine at request time — 
 
 ## Current Status
 
-jitsudo currently implements **Tier 3 human approval** and **break-glass** emergency access. The full three-tier approval model — including Tier 1 (OPA-driven auto-approve) and Tier 2 (AI-assisted review via MCP) — is the target architecture and is planned for [Milestone 4](/roadmap/).
-
-| Tier | Decision maker | Status |
-|------|---------------|--------|
-| **Tier 1** | OPA policy (auto-approve for low-risk, high-trust requests) | Milestone 4 |
-| **Tier 2** | AI agent via MCP (approve, deny, or escalate with reasoning) | Milestone 4 |
-| **Tier 3** | Policy-designated human approver | **Available now** |
-| **Break-glass** | Requester-initiated emergency bypass (immediate alerts) | **Available now** |
+| Tier | Decision maker | Typical use |
+|------|---------------|-------------|
+| **Tier 1** | OPA policy (auto-approve) | Low-risk, high-trust requests approved in milliseconds |
+| **Tier 2** | AI agent via MCP (approve, deny, or escalate with reasoning) | Medium-risk requests — AI synthesizes context, always escalates on uncertainty |
+| **Tier 3** | Policy-designated human approver | High-risk operations; any request the AI tier escalates |
+| **Break-glass** | Requester-initiated emergency bypass (immediate alerts) | P0 incidents when no approver is reachable |
 
 See [Approval Model](/docs/architecture/approval-model/) for the full architecture specification.
 

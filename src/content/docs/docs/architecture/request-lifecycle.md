@@ -47,15 +47,11 @@ Tier 1       Tier 2         Tier 3
 
 The OPA policy engine routes each request to one of three approval paths immediately after submission. The routing decision is based on the request attributes and the requesting principal's trust tier.
 
-| Tier | Who decides | When used | Status |
-|------|------------|-----------|--------|
-| **Tier 1** | OPA policy (auto) | Low-risk operations, high-trust principals | Milestone 4 |
-| **Tier 2** | AI agent via MCP | Medium-risk with active incident context | Milestone 4 |
-| **Tier 3** | Policy-designated human | High-risk operations; Tier 2 escalations | Available now |
-
-<Aside type="note" title="Current behavior">
-In the current release, all requests are routed directly to Tier 3 (human approval). Tier 1 and Tier 2 routing will be introduced in Milestone 4. See [Approval Model](/docs/architecture/approval-model/) for the full design.
-</Aside>
+| Tier | Who decides | When used |
+|------|------------|-----------|
+| **Tier 1** | OPA policy (auto) | Low-risk operations, high-trust principals |
+| **Tier 2** | AI agent via MCP | Medium-risk with active incident context |
+| **Tier 3** | Policy-designated human | High-risk operations; Tier 2 escalations |
 
 ## Transition Rules
 

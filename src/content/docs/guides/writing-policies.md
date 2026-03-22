@@ -179,10 +179,8 @@ package jitsudo.approval
 default allow = false
 ```
 
-:::caution[Not yet available: auto-approval and AI-assisted review]
-Approval policies currently route all requests to **Tier 3 (human approval)**. Policy-driven auto-approval (Tier 1) and AI-assisted review (Tier 2) are planned for [Milestone 4](/roadmap/).
-
-The `approver_tier` output field and `input.trust_tier` input field are part of the Milestone 4 policy schema. See [Approval Model](/docs/architecture/approval-model/) for the full design.
+:::note[Tier routing]
+Approval policies can return `approver_tier` to route requests to Tier 1 (OPA auto-approve), Tier 2 (AI-assisted review via MCP), or Tier 3 (human). Policies without an `approver_tier` rule default to `"human"`. See [Three-Tier Approval Routing](#three-tier-approval-routing) below and [Approval Model](/docs/architecture/approval-model/) for the full design.
 :::
 
 ### Example: Require SRE Lead Approval for Production
@@ -330,11 +328,11 @@ A stolen but unexpired JWT can be used to submit requests until it expires. Shor
 
 ---
 
-## Three-Tier Approval Routing (Milestone 4)
+## Three-Tier Approval Routing
 
-In the Milestone 4 policy schema, approval policies will be able to return `approver_tier` as a first-class output, routing the request to OPA auto-approval (Tier 1), AI-assisted review (Tier 2), or human approval (Tier 3).
+Approval policies return `approver_tier` to route each request to the correct approval path. Policies without an `approver_tier` rule default to `"human"` — fully backwards-compatible.
 
-The following is a preview of the Milestone 4 policy shape — **not available in the current release**:
+The complete three-tier policy shape:
 
 ```rego
 package jitsudo.approval
@@ -346,7 +344,7 @@ read_only_roles := {"prod-read-only", "roles/viewer", "view"}
 
 # Tier 1: auto-approve for low-risk, high-trust requests
 approver_tier := "auto" if {
-    input.trust_tier >= 3
+    input.context.trust_tier >= 3
     input.request.role in read_only_roles
     input.request.duration_seconds <= 1800
 }
@@ -364,4 +362,6 @@ approver_tier := "human" if {
 }
 ```
 
-See [Approval Model](/docs/architecture/approval-model/) for the full three-tier design and `input.trust_tier` reference.
+All three tiers are available. When `approver_tier := "ai_review"`, the request sits PENDING and is surfaced to the configured AI agent via the MCP approver endpoint (`POST /mcp`). The agent calls `approve_request`, `deny_request`, or `escalate_to_human` — any uncertainty routes to Tier 3 human review. The agent's full reasoning is stored in the audit log.
+
+See [Approval Model](/docs/architecture/approval-model/) for the full three-tier design and `input.context.trust_tier` reference.
