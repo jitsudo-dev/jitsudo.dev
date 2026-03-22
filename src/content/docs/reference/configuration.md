@@ -227,6 +227,62 @@ notifications:
       - "security@example.com"
 ```
 
+#### `notifications.webhooks`
+
+A list of generic outbound webhooks. Each entry POSTs a structured JSON payload to the configured URL whenever an event occurs. Multiple entries are supported — each is an independent notifier.
+
+| Field | YAML key | Env var | Default | Description |
+|-------|----------|---------|---------|-------------|
+| URL | `notifications.webhooks[].url` | `JITSUDOD_WEBHOOK_URL`* | — | HTTP(S) endpoint to POST to |
+| Headers | `notifications.webhooks[].headers` | — | `{}` | Custom HTTP headers added to every request (e.g. `Authorization`) |
+| Secret | `notifications.webhooks[].secret` | — | `""` | HMAC-SHA256 signing key. When set, a `X-Jitsudo-Signature-256: sha256=<hex>` header is included so receivers can verify authenticity |
+| Events | `notifications.webhooks[].events` | — | `[]` (all) | Allowlist of event types to forward. Empty means all events are forwarded |
+
+\* `JITSUDOD_WEBHOOK_URL` injects a single no-auth, no-filter webhook entry when no `webhooks:` block is defined in the YAML config. Useful for simple Docker / Kubernetes Secret deployments.
+
+**Payload fields**
+
+Each POST body is a JSON object:
+
+```json
+{
+  "type": "approved",
+  "request_id": "01JF4...",
+  "actor": "approver@example.com",
+  "provider": "aws",
+  "role": "ReadOnly",
+  "scope": "123456789012",
+  "reason": "incident investigation",
+  "expires_at": "2025-01-15T18:00:00Z",
+  "timestamp": "2025-01-15T17:00:00Z"
+}
+```
+
+`expires_at` is omitted when not applicable. `timestamp` is the UTC time the event was dispatched.
+
+**Event types:** `request_created`, `approved`, `auto_approved`, `ai_approved`, `ai_denied`, `ai_escalated`, `denied`, `expired`, `revoked`, `break_glass`.
+
+**Signature verification example (Go):**
+
+```go
+mac := hmac.New(sha256.New, []byte(secret))
+mac.Write(body)
+expected := "sha256=" + hex.EncodeToString(mac.Sum(nil))
+ok := hmac.Equal([]byte(r.Header.Get("X-Jitsudo-Signature-256")), []byte(expected))
+```
+
+```yaml
+notifications:
+  webhooks:
+    - url: "https://hooks.example.com/jitsudo"
+      secret: ""          # supply via a mounted secret; leave empty to skip signing
+      events: []          # empty = all events
+      headers:
+        Authorization: "Bearer <token>"
+    - url: "https://other.example.com/hook"
+      events: ["break_glass", "approved"]
+```
+
 ---
 
 ### `mcp`

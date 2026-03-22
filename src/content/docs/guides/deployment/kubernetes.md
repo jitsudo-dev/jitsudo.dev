@@ -175,6 +175,9 @@ config:
       from: "jitsudo@example.com"
       to:
         - "sre-team@example.com"
+    webhooks:
+      - url: "https://hooks.example.com/jitsudo"
+        existingSecret: "jitsudo-webhook"  # Secret with url / secret key
 ```
 
 ## RBAC for the Kubernetes Provider
