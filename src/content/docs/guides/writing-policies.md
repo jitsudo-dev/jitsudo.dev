@@ -48,6 +48,9 @@ All policies receive the same input document:
     "reason": "Investigating P1 ECS crash",
     "break_glass": false,
     "metadata": {}
+  },
+  "context": {
+    "trust_tier": 3
   }
 }
 ```
@@ -63,6 +66,7 @@ All policies receive the same input document:
 | `request.reason` | string | Justification text from the requester |
 | `request.break_glass` | boolean | Whether break-glass mode was requested |
 | `request.metadata` | object | Provider-specific additional parameters |
+| `context.trust_tier` | number | Principal trust tier (0–4), assigned by a jitsudo administrator. Used for Tier 1 auto-approval routing. See [Approval Model](/docs/architecture/approval-model/#principal-trust-tiers). |
 
 ## Eligibility Policies
 
@@ -274,6 +278,18 @@ jitsudo policy eval \
 - **Multiple eligibility policies:** All enabled eligibility policies are evaluated. A request is allowed if **any** policy returns `allow = true`.
 - **Multiple approval policies:** All enabled approval policies are evaluated. The same "any" semantics apply.
 - **Disabled policies:** Policies with `enabled: false` are not loaded into the OPA engine and have no effect.
+
+:::caution[Permissive policies override restrictive ones]
+Because a request is granted if *any* enabled policy allows it, a broad permissive policy silently overrides all restrictive ones. A catch-all test policy left enabled in production will grant access to requests your other policies would deny.
+
+**Before and after every policy change**, audit your active policies:
+
+```bash
+jitsudo policy list
+```
+
+Disable test policies before promoting to production. Where possible, use a single authoritative eligibility policy rather than layering multiple policies — layered policies require careful understanding of the "any" semantics to reason about safely.
+:::
 
 ## Reloading Policies
 

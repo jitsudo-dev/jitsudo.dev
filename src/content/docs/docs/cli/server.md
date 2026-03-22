@@ -70,6 +70,46 @@ Next steps:
   3. Log in from the CLI: jitsudo login --server localhost:8080
 ```
 
+## Admin Bootstrap
+
+After running `server init`, the next step is enrolling the first administrator. The `jitsudo-admins` group controls access to privileged control plane operations — most importantly, assigning principal trust tiers via the `SetPrincipalTrustTier` API.
+
+### How `jitsudo-admins` works
+
+`jitsudo-admins` is not a database concept — it is an IdP group, resolved from the `groups` claim in the OIDC token at request time. Like any group in jitsudo policies, membership is managed in your identity provider.
+
+### Day-one enrollment
+
+1. In your IdP, create a group named `jitsudo-admins` (exact name must match what is checked by the server).
+2. Add the first administrator's account to that group.
+3. The administrator logs in with `jitsudo login` — their token will now include `jitsudo-admins` in the groups claim.
+4. The administrator can now call `SetPrincipalTrustTier` to assign trust tiers to other principals:
+
+```bash
+# Assign trust tier 3 to a senior SRE (admin only)
+curl -X PUT https://jitsudod:8080/api/v1alpha1/principals/alice@example.com/trust-tier \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"trust_tier": 3}'
+```
+
+### Ongoing membership management
+
+Add and remove members from `jitsudo-admins` in your IdP using the same process as any other group. Changes take effect at the next token issuance (typically within minutes, depending on your IdP's token lifetime).
+
+Audit `jitsudo-admins` membership regularly. Treat it as a Tier 0 group — the same level of scrutiny as your cloud IAM admin roles.
+
+### Recovery: all admins offboarded
+
+If every member of `jitsudo-admins` has left the organization:
+
+1. In your IdP, add a recovery identity (a break-glass admin account or a new employee) to the `jitsudo-admins` group.
+2. Authenticate as that identity: `jitsudo login`.
+3. Re-enroll other administrators and re-assign trust tiers as needed.
+
+The recovery path does not require database access or server restart — it is purely an IdP group membership change.
+
+See [Approval Model — Principal Trust Tiers](/docs/architecture/approval-model/#principal-trust-tiers) for trust tier values and their effect on approval routing.
+
 ## `status`
 
 Check the health of a running jitsudod instance by polling its health endpoints.

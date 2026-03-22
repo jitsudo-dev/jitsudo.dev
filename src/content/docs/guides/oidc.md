@@ -217,12 +217,17 @@ jitsudo trusts the `groups` claim in the OIDC ID token without independent verif
 - Audit your IdP group membership regularly
 - Restrict who can modify group assignments in your IdP
 
-### Recommended JWT lifetime
+### Token Lifecycle and Replay
 
-Use short JWT lifetimes (60–120 minutes) in your IdP configuration. jitsudo validates JWT expiry on every API call, but a stolen JWT is valid until it expires. Shorter lifetimes limit the replay window.
+**Validation on every API call.** jitsudo validates the JWT signature, issuer (`iss`), audience (`aud`), and expiry (`exp`) on every API request by fetching and caching your IdP's JWKS from `{oidc_issuer}/.well-known/openid-configuration`. There is no session state held server-side — every request is independently verified against the live JWKS. A token that was valid at login is re-validated on each subsequent call.
 
-- Okta / Entra ID / Keycloak all support configuring access token and ID token lifetimes
-- Do not set lifetimes above 4 hours for production use
+**What happens when a token expires mid-session.** When a JWT expires, the server returns a `401 Unauthorized` response. The CLI surfaces this as a re-authentication prompt. There is no automatic silent refresh — `offline_access` is requested for future refresh token support, but is not currently used. If a token expires while you have a pending approval in flight, re-run `jitsudo login` and then check `jitsudo status` — the pending request is unaffected and preserved in the database.
+
+**Stolen token replay.** A stolen but unexpired JWT can be used to submit elevation requests until it expires. jitsudo has no additional binding (e.g., mTLS client certificate binding) to tie a JWT to a specific device. Mitigations:
+
+- **Short JWT lifetimes**: Configure 60–120 minute token lifetimes in your IdP. Do not exceed 4 hours for production use. All major IdPs (Okta, Entra ID, Keycloak) support configuring access and ID token lifetimes.
+- **IdP session revocation**: Revoking an IdP session or account blocks new tokens from being issued. If a token is stolen, immediately revoke the IdP session to limit the window.
+- **Step-up authentication**: Configure your IdP to require re-authentication before issuing tokens for sensitive operations. Some IdPs support step-up auth policies tied to specific client IDs or scopes.
 
 ### Offboarding principals
 

@@ -50,6 +50,8 @@ Enterprise PAM platforms (CyberArk, BeyondTrust, StrongDM, Teleport) are powerfu
 - **Complexity**: full PAM suites are multi-week implementations. jitsudo can be operational in a day.
 - **Not agent-native**: none of these tools were designed with AI agents as first-class requestors or approvers.
 
+**A note on Teleport.** Teleport deserves specific mention because it is open source, has a strong CLI (`tsh`), and is widely used in infrastructure teams. It is an excellent tool — for a different problem. Teleport is primarily a **network access and session recording** platform: it manages access to servers, databases, Kubernetes clusters, and internal web apps via its proxy model. It does not manage cloud IAM role assignments (AWS IAM roles, Azure RBAC, GCP IAM). If your threat model centers on audited network access and session recording, Teleport is a good choice. If it centers on temporary cloud IAM privilege elevation with policy-as-code approval workflows, that is jitsudo's problem space. Many teams use both.
+
 jitsudo's position: **not a full PAM suite**. jitsudo does JIT access management well. It does not do session recording, VPN, credential vaulting, or bastion host functionality — those are separate tools with separate jobs. See [What jitsudo is NOT](/docs/what-is-jitsudo/#what-jitsudo-is-not).
 
 ---
@@ -105,14 +107,14 @@ No existing open source JIT PAM tool was built with AI agents as first-class par
 
 ## Summary Table
 
-| Dimension | jitsudo | AWS IAM Identity Center | Azure PIM | GCP PAM | CyberArk / BeyondTrust |
-|-----------|---------|------------------------|-----------|---------|----------------------|
-| Multi-cloud | ✓ | AWS only | Azure only | GCP only | ✓ |
-| Self-hosted | ✓ | ✗ (AWS-managed) | ✗ (Azure-managed) | ✗ (GCP-managed) | ✓ (on-prem) |
-| Open source | ✓ | ✗ | ✗ | ✗ | ✗ |
-| Policy-as-code | ✓ (OPA/Rego) | Limited | GUI only | Limited | GUI/proprietary |
-| AI agent native | ✓ | ✗ | ✗ | ✗ | ✗ |
-| CLI-first | ✓ | Partial | ✗ | Partial | ✗ |
-| Session recording | ✗ | ✗ | ✗ | ✗ | ✓ |
-| Bastion host | ✗ | ✗ | ✗ | ✗ | ✓ |
-| License | ELv2 (free self-hosted) | Included with AWS | Requires Entra P2 | Usage-based | Per-seat enterprise |
+| Dimension | jitsudo | AWS IAM Identity Center | Azure PIM | GCP PAM | Teleport | CyberArk / BeyondTrust |
+|-----------|---------|------------------------|-----------|---------|----------|----------------------|
+| Multi-cloud IAM JIT | ✓ | AWS only | Azure only | GCP only | ✗ (network access) | ✓ |
+| Self-hosted | ✓ | ✗ (AWS-managed) | ✗ (Azure-managed) | ✗ (GCP-managed) | ✓ | ✓ (on-prem) |
+| Open source | ✓ | ✗ | ✗ | ✗ | ✓ (Apache 2.0) | ✗ |
+| Policy-as-code | ✓ (OPA/Rego) | Limited | GUI only | Limited | Partial (YAML RBAC) | GUI/proprietary |
+| AI agent native | ✓ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| CLI-first | ✓ | Partial | ✗ | Partial | ✓ (tsh) | ✗ |
+| Session recording | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ |
+| Bastion host | ✗ | ✗ | ✗ | ✗ | ✓ | ✓ |
+| License | ELv2 (free self-hosted) | Included with AWS | Requires Entra P2 | Usage-based | Apache 2.0 / Enterprise | Per-seat enterprise |

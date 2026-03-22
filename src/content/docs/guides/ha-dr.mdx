@@ -43,6 +43,18 @@ This is intentional. An unreachable access control system should not silently gr
 
 **Exception: the expiry sweeper stops.** The background process that calls `Revoke` on expired grants will not run while jitsudod is down. Grants that expire during the outage will linger until the sweeper resumes. For providers with native TTL enforcement (GCP IAM conditions, Kubernetes TTL annotations), expiry is enforced by the provider regardless. For Azure RBAC, the sweeper is the enforcement mechanism — grants will overstay their TTL during a prolonged outage.
 
+<Aside type="caution" title="Azure RBAC: no native TTL enforcement">
+Unlike AWS (STS session tokens self-expire) and GCP (IAM conditions enforce TTL), Azure RBAC has no native time-bound assignment support. jitsudod's expiry sweeper is the sole enforcement mechanism. During a prolonged control plane outage, Azure RBAC grants will remain active indefinitely until the sweeper resumes.
+
+**Mitigations for Azure operators:**
+- **Shorter TTLs:** Request shorter elevation windows for Azure grants (e.g., 30–60 minutes instead of 4 hours). This bounds the maximum overstay duration if an outage occurs.
+- **Azure Monitor alert:** Create an alert that fires on role assignments older than your maximum permitted TTL — this detects stuck grants even during a jitsudod outage. Filter on assignments made by jitsudod's service principal.
+- **Azure PIM as fallback:** Azure Privileged Identity Management (PIM) supports time-bound role assignments natively. Configure PIM as a secondary enforcement layer for your highest-sensitivity scopes.
+- **Monitor jitsudod availability:** A jitsudod outage is a security event for Azure providers. Add jitsudod `/healthz` to your uptime monitoring with a short alert threshold.
+
+See [Azure Provider — Security Considerations](/docs/guides/providers/azure/#security-considerations) for provider-level guidance.
+</Aside>
+
 ### Database unavailable
 
 If PostgreSQL is unavailable, jitsudod cannot process any requests (all operations require database access). jitsudod instances will log errors and return 503 responses. Recovery is automatic once the database is restored.

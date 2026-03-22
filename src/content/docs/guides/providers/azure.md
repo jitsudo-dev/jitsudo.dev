@@ -125,6 +125,25 @@ providers:
 | `credentials_source` | No | `workload_identity` | `workload_identity` or `client_secret` |
 | `max_duration` | No | no cap | Maximum elevation window |
 
+## Security Considerations
+
+### Azure RBAC expiry is enforced by jitsudod, not by Azure
+
+Azure RBAC does not support time-bound role assignments without Azure AD PIM. This means **expiry is entirely managed by the jitsudo expiry sweeper** — there is no cloud-side safety net.
+
+Compare this to:
+- **AWS**: STS session tokens have a hard expiry enforced by AWS. Even if jitsudod is down, credentials expire.
+- **GCP**: IAM conditions with TTL are enforced by GCP at grant time. No sweeper required.
+- **Azure**: RBAC assignments have no native TTL. If jitsudod is down and the sweeper stops, Azure grants persist until jitsudod recovers.
+
+**Recommended mitigations:**
+- Use shorter TTLs for Azure grants (30–60 minutes rather than multi-hour windows). This limits the exposure window if jitsudod becomes unavailable.
+- Monitor jitsudod uptime closely. A prolonged outage means Azure RBAC grants are not being revoked.
+- Consider using Azure PIM for your highest-sensitivity scopes as a secondary TTL enforcement layer.
+- Create an Azure Monitor alert on role assignments made by jitsudod's service principal that exceed your maximum permitted TTL.
+
+See [HA & DR — Control Plane Unavailable](/docs/guides/ha-dr/#control-plane-unavailable-all-jitsudod-instances-down) for the full failure mode analysis.
+
 ## Request Examples
 
 ```bash

@@ -132,7 +132,7 @@ PENDING → ACTIVE                  Route to approver
 
 ## Principal Trust Tiers
 
-Trust tiers quantify how much a principal's identity and history is trusted by the policy engine. They are assigned during principal enrollment and exposed as `input.trust_tier` in all OPA policy evaluations.
+Trust tiers quantify how much a principal's identity and history is trusted by the policy engine. They are assigned during principal enrollment and exposed as `input.context.trust_tier` in all OPA policy evaluations.
 
 | Tier | Description | Typical profile |
 |------|-------------|----------------|
@@ -142,7 +142,7 @@ Trust tiers quantify how much a principal's identity and history is trusted by t
 | 3 | High-trust principal | Senior SRE, team lead; eligible for Tier 1 auto-approve on low-risk ops |
 | 4 | Break-glass eligible; highest trust | On-call lead, security team; audited separately |
 
-Trust tier assignment is managed by the jitsudo administrator via the `SetPrincipalTrustTier` API (requires the `jitsudo-admins` group). Tier values are durable per principal, stored in the `principals` table, and updated on enrollment or role change. The trust tier is automatically surfaced as `input.context.trust_tier` in every OPA eligibility and approval evaluation.
+Trust tier assignment is managed by the jitsudo administrator via the `SetPrincipalTrustTier` API (requires the `jitsudo-admins` group). Tier values are durable per principal, stored in the `principals` table, and updated on enrollment or role change. The trust tier is automatically surfaced as `input.context.trust_tier` in every OPA eligibility and approval evaluation. See [Admin Bootstrap](/docs/cli/server/#admin-bootstrap) for how to enroll the first administrator.
 
 ```bash
 # Set trust tier for a principal (admin only)
