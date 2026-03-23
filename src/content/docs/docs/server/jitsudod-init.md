@@ -13,17 +13,17 @@ jitsudod init --db-url <url> --oidc-issuer <url> --oidc-client-id <id> [flags]
 
 ## Flags
 
-| Flag | Required | Default | Description |
-|------|----------|---------|-------------|
-| `--db-url <url>` | **Yes*** | — | PostgreSQL connection URL |
-| `--oidc-issuer <url>` | **Yes** | — | OIDC issuer URL for JWT validation |
-| `--oidc-client-id <id>` | **Yes** | — | OIDC client ID registered for the server |
-| `--http-addr <addr>` | No | `:8080` | HTTP (REST gateway) listen address |
-| `--grpc-addr <addr>` | No | `:8443` | gRPC listen address |
-| `--config-out <path>` | No | `jitsudo.yaml` | Path to write the generated config file |
-| `--skip-migrations` | No | `false` | Skip database migrations (use if already migrated) |
+| Flag | Required | Default | Environment Variable | Description |
+|------|----------|---------|----------------------|-------------|
+| `--db-url <url>` | **Yes*** | — | `JITSUDOD_DATABASE_URL` | PostgreSQL connection URL |
+| `--oidc-issuer <url>` | **Yes*** | — | `JITSUDOD_OIDC_ISSUER` | OIDC issuer URL for JWT validation |
+| `--oidc-client-id <id>` | **Yes*** | — | `JITSUDOD_OIDC_CLIENT_ID` | OIDC client ID registered for the server |
+| `--http-addr <addr>` | No | `:8080` | — | HTTP (REST gateway) listen address |
+| `--grpc-addr <addr>` | No | `:8443` | — | gRPC listen address |
+| `--config-out <path>` | No | `jitsudo.yaml` | — | Path to write the generated config file |
+| `--skip-migrations` | No | `false` | — | Skip database migrations (use if already migrated) |
 
-\* Or set the `JITSUDOD_DATABASE_URL` environment variable — see the security note below.
+\* The value may be set via the corresponding environment variable instead of the flag.
 
 ## What `init` does
 
@@ -42,17 +42,16 @@ jitsudod init \
 ```
 
 :::caution[Security: password in process list]
-Passing a database URL with a password via `--db-url` exposes it in the process list (`ps aux`) to all users on the host. For provisioning scripts or CI pipelines, prefer the environment variable instead:
+Passing a database URL with a password via `--db-url` exposes it in the process list (`ps aux`) to all users on the host. For provisioning scripts or CI pipelines, prefer environment variables instead — all three mandatory values can be supplied this way:
 
 ```bash
 export JITSUDOD_DATABASE_URL="postgres://jitsudo:password@localhost:5432/jitsudo?sslmode=require"
-jitsudod init \
-  --oidc-issuer https://your-org.okta.com \
-  --oidc-client-id jitsudo-server \
-  --config-out /etc/jitsudo/config.yaml
+export JITSUDOD_OIDC_ISSUER="https://your-org.okta.com"
+export JITSUDOD_OIDC_CLIENT_ID="jitsudo-server"
+jitsudod init --config-out /etc/jitsudo/config.yaml
 ```
 
-`jitsudod init` honours `JITSUDOD_DATABASE_URL` with the same priority as `--db-url`.
+`jitsudod init` honours `JITSUDOD_DATABASE_URL`, `JITSUDOD_OIDC_ISSUER`, and `JITSUDOD_OIDC_CLIENT_ID` with the same priority as their flag equivalents.
 
 Note: the generated `jitsudo.yaml` will still contain the database URL. To avoid storing credentials in the config file for the running server, set `JITSUDOD_DATABASE_URL` at runtime — the server always overrides the config file value with the environment variable. See the [Security Hardening Guide](/guides/security-hardening/) for the recommended production setup.
 :::

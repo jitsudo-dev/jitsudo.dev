@@ -13,9 +13,9 @@ jitsudod [--config <path>]
 
 ## Flags
 
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--config <path>` | `$JITSUDOD_CONFIG` | Path to YAML config file |
+| Flag | Required | Default | Environment Variable | Description |
+|------|----------|---------|----------------------|-------------|
+| `--config <path>` | No | — | `JITSUDOD_CONFIG` | Path to YAML config file |
 
 ## Description
 
