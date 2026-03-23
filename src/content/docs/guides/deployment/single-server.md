@@ -1,6 +1,6 @@
 ---
 title: Single-Server Bootstrap
-description: Deploy jitsudo on a single Linux server using jitsudo server init.
+description: Deploy jitsudo on a single Linux server using jitsudod init.
 ---
 
 Deploy jitsudo on a single Linux server. This setup is suitable for small teams or organizations that do not run Kubernetes.
@@ -46,7 +46,7 @@ psql -c "ALTER USER jitsudo WITH PASSWORD 'STRONG_PASSWORD';"
 ```bash
 sudo mkdir -p /etc/jitsudo
 
-jitsudo server init \
+jitsudod init \
   --db-url "postgres://jitsudo:STRONG_PASSWORD@localhost:5432/jitsudo?sslmode=require" \
   --oidc-issuer https://your-idp.example.com \
   --oidc-client-id jitsudo-server \
@@ -200,7 +200,7 @@ jitsudo server status --server-url https://jitsudo.example.com
 
 ## 8. Enroll the First Administrator
 
-`server init` does not create any administrator accounts. Admin authority in jitsudo is derived entirely from your identity provider: users who are members of the `jitsudo-admins` IdP group receive admin privileges when they authenticate.
+`jitsudod init` does not create any administrator accounts. Admin authority in jitsudo is derived entirely from your identity provider: users who are members of the `jitsudo-admins` IdP group receive admin privileges when they authenticate.
 
 **Day-one steps:**
 
@@ -210,7 +210,7 @@ jitsudo server status --server-url https://jitsudo.example.com
 
 The administrator can now assign [principal trust tiers](/docs/architecture/approval-model/#principal-trust-tiers) and perform other privileged control plane operations.
 
-See [Admin Bootstrap](/docs/cli/server/#admin-bootstrap) for the full procedure, including ongoing membership management and the recovery path if all administrators are offboarded.
+See [Admin Bootstrap](/docs/server/jitsudod-init/#admin-bootstrap) for the full procedure, including ongoing membership management and the recovery path if all administrators are offboarded.
 
 ---
 

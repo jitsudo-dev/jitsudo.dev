@@ -56,7 +56,7 @@ See the [Quickstart](/docs/quickstart/) for a full walkthrough.
 For a single VM or bare metal server:
 
 ```bash
-jitsudo server init \
+jitsudod init \
   --db-url postgres://jitsudo:password@localhost:5432/jitsudo \
   --oidc-issuer https://your-idp.okta.com \
   --oidc-client-id jitsudo-server

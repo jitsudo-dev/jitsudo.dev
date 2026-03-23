@@ -40,6 +40,13 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Server Reference',
+					items: [
+						{ label: 'jitsudod', slug: 'docs/server/jitsudod' },
+						{ label: 'jitsudod init', slug: 'docs/server/jitsudod-init' },
+					],
+				},
+				{
 					label: 'Architecture',
 					items: [
 						{ label: 'System Overview', slug: 'docs/architecture/overview' },

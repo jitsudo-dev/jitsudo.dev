@@ -238,15 +238,15 @@ serviceAccount:
 
 ## Bootstrap After Installation
 
-After installing the chart, run `server init` to run migrations:
+After installing the chart, run `jitsudod init` to generate a starter config file. Pass `--skip-migrations` since the Helm chart runs migrations on startup:
 
 ```bash
 kubectl exec -n jitsudo deployment/jitsudo -- \
-  jitsudo server init \
+  jitsudod init \
     --db-url "$DATABASE_URL" \
     --oidc-issuer https://your-idp.example.com \
     --oidc-client-id jitsudo-server \
-    --skip-migrations  # chart runs migrations on startup
+    --skip-migrations
 ```
 
 ## Verify Deployment
