@@ -73,7 +73,7 @@ export default defineConfig({
 						{ label: 'Security Hardening', slug: 'guides/security-hardening' },
 						{ label: 'HA & Disaster Recovery', slug: 'guides/ha-dr' },
 						{
-							label: 'Provider Guides',
+							label: 'Quickstarts',
 							items: [
 								{ label: 'AWS', slug: 'guides/quickstart-aws' },
 								{ label: 'GCP', slug: 'guides/quickstart-gcp' },
