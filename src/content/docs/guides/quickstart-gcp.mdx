@@ -1,0 +1,216 @@
+---
+title: First Real Request — GCP
+description: Walk through a complete jitsudo elevation request using a real GCP project, from IAM setup to credential use, with native TTL enforcement via IAM conditions.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide extends the [Quickstart](/docs/quickstart/) to use a real GCP project instead of the mock provider. By the end you will have submitted, approved, and executed against a live GCP IAM binding — and verified that GCP enforces the TTL natively at the cloud layer, with no dependency on the jitsudo expiry sweeper.
+
+<Aside type="note">
+This guide creates a sandbox service account with read-only access to GCP Cloud Storage in a non-production project. No production resources are touched. You will need a GCP project and the `roles/iam.securityAdmin` or `roles/owner` role to create service accounts and IAM bindings.
+</Aside>
+
+## What You'll Need
+
+- A working jitsudo local environment (from the [Quickstart](/docs/quickstart/))
+- A GCP project you control (a sandbox or personal project is fine)
+- The `gcloud` CLI installed and authenticated
+- `roles/iam.securityAdmin` or `roles/owner` on the project
+
+## Step 1: Enable Required APIs
+
+```bash
+gcloud services enable iam.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  --project YOUR_PROJECT_ID
+```
+
+## Step 2: Create a Service Account for jitsudod
+
+jitsudod needs a GCP service account identity to call the IAM API on behalf of your deployment. In production this would use Workload Identity Federation; for local development, a service account key is simplest.
+
+```bash
+# Create the service account
+gcloud iam service-accounts create jitsudo-control-plane \
+  --display-name "jitsudo control plane" \
+  --project YOUR_PROJECT_ID
+
+# Store the full email for later steps
+SA_EMAIL="jitsudo-control-plane@YOUR_PROJECT_ID.iam.gserviceaccount.com"
+```
+
+## Step 3: Grant jitsudod IAM Permissions
+
+jitsudod needs `roles/iam.securityAdmin` (or a custom role with `resourcemanager.projects.getIamPolicy` and `resourcemanager.projects.setIamPolicy`) to create and delete IAM bindings:
+
+```bash
+gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/iam.securityAdmin"
+```
+
+<Aside type="tip">
+For production, create a custom role scoped to `setIamPolicy` and `getIamPolicy` on the specific projects jitsudo manages, rather than granting `roles/iam.securityAdmin` at the project level.
+</Aside>
+
+For local development, create and download a service account key:
+
+```bash
+gcloud iam service-accounts keys create ./jitsudo-sa-key.json \
+  --iam-account="${SA_EMAIL}" \
+  --project YOUR_PROJECT_ID
+```
+
+<Aside type="caution">
+Never commit `jitsudo-sa-key.json` to source control. Add it to `.gitignore` immediately. In production, use Workload Identity Federation — see the [GCP Provider guide](/guides/providers/gcp/).
+</Aside>
+
+## Step 4: Configure jitsudod for GCP
+
+Add the GCP provider block to your `jitsudod.yaml`:
+
+```yaml
+providers:
+  gcp:
+    project_id: "YOUR_PROJECT_ID"
+    max_duration: "2h"
+```
+
+Set the credentials environment variable:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/jitsudo-sa-key.json"
+```
+
+Restart jitsudod with `make docker-up` (or your equivalent).
+
+## Step 5: Apply an Eligibility Policy
+
+```bash
+cat > gcp-eligibility.rego << 'EOF'
+package jitsudo.eligibility
+
+import future.keywords.if
+
+default allow = false
+default reason = "not authorized"
+
+allow if {
+  input.user.groups[_] == "sre"
+  input.request.provider == "gcp"
+  input.request.role == "roles/storage.objectViewer"
+  input.request.duration_seconds <= 3600
+}
+
+reason = "allowed" if { allow }
+EOF
+
+jitsudo policy apply -f gcp-eligibility.rego \
+  --type eligibility \
+  --name gcp-sandbox-eligibility
+```
+
+## Step 6: Submit a Real GCP Request
+
+```bash
+jitsudo request \
+  --provider gcp \
+  --role roles/storage.objectViewer \
+  --scope YOUR_PROJECT_ID \
+  --duration 30m \
+  --reason "Testing real GCP provider - sandbox"
+```
+
+You should see:
+
+```
+✓ Request submitted (ID: req_01...)
+⏳ Awaiting approval
+```
+
+## Step 7: Approve the Request
+
+In a second terminal:
+
+```bash
+jitsudo approve req_01...
+```
+
+## Step 8: Execute with Real GCP Credentials
+
+```bash
+# List Cloud Storage buckets using the elevated binding
+jitsudo exec req_01... -- gcloud storage buckets list \
+  --project YOUR_PROJECT_ID
+```
+
+The `exec` command injects `GOOGLE_CLOUD_PROJECT` and `CLOUDSDK_CORE_PROJECT` into the subprocess. The IAM binding grants `roles/storage.objectViewer` to your user identity on the project.
+
+## Step 9: Understand GCP's Native TTL Enforcement
+
+GCP IAM Conditions support time-bound bindings natively. jitsudo uses `conditions` on the IAM binding to enforce the TTL at the GCP layer — this is fundamentally different from AWS and Azure.
+
+Inspect the binding jitsudo created:
+
+```bash
+gcloud projects get-iam-policy YOUR_PROJECT_ID \
+  --format=json \
+  | jq '.bindings[] | select(.role == "roles/storage.objectViewer")'
+```
+
+You will see something like:
+
+```json
+{
+  "condition": {
+    "expression": "request.time < timestamp(\"2026-03-20T18:30:00Z\")",
+    "title": "jitsudo-req_01...-expiry"
+  },
+  "members": ["user:you@example.com"],
+  "role": "roles/storage.objectViewer"
+}
+```
+
+GCP will refuse requests using this binding after the timestamp in the condition expression — regardless of whether jitsudod is running. This is a security property that requires no trust in jitsudo's availability. AWS requires jitsudod to attach a deny policy to revoke; Azure relies entirely on jitsudod's expiry sweeper. GCP's native TTL stands on its own.
+
+## Step 10: Verify the Audit Log
+
+```bash
+jitsudo audit --request req_01...
+```
+
+You should see `request.created`, `request.approved`, `grant.issued`. After the TTL expires, `grant.expired` will appear — GCP has already enforced the expiry independently via the IAM condition.
+
+## Step 11: Test Early Revocation
+
+```bash
+jitsudo revoke req_01...
+```
+
+This calls `setIamPolicy` to remove the binding immediately, before the IAM condition would have expired it naturally. Verify revocation:
+
+```bash
+jitsudo exec req_01... -- gcloud storage buckets list \
+  --project YOUR_PROJECT_ID
+# Should fail: PERMISSION_DENIED
+```
+
+## Cleanup
+
+```bash
+# The IAM binding is removed automatically on revocation or expiry.
+# Delete the service account key used for local development:
+gcloud iam service-accounts keys delete KEY_ID \
+  --iam-account="${SA_EMAIL}" \
+  --project YOUR_PROJECT_ID
+
+# Optionally remove the service account entirely:
+gcloud iam service-accounts delete "${SA_EMAIL}" \
+  --project YOUR_PROJECT_ID
+```
+
+## Next Steps
+
+- See the full [GCP Provider guide](/guides/providers/gcp/) for production configuration, including Workload Identity Federation, custom roles, and multi-project setups
+- See [Security Hardening](/guides/security-hardening/) before deploying to production

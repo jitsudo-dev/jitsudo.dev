@@ -1,0 +1,219 @@
+---
+title: First Real Request — Azure
+description: Walk through a complete jitsudo elevation request using a real Azure subscription, including setup of an Azure Monitor alert to mitigate the lack of native RBAC TTL enforcement.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide extends the [Quickstart](/docs/quickstart/) to use a real Azure subscription instead of the mock provider. By the end you will have submitted, approved, and executed against a live Azure RBAC assignment.
+
+<Aside type="caution">
+Azure RBAC does not support native time-bound role assignments without Azure AD PIM. This means the jitsudo expiry sweeper is the sole TTL enforcement mechanism for Azure grants. If jitsudod is unavailable, Azure RBAC assignments will persist beyond their intended TTL until jitsudod recovers. This guide walks you through setting up an Azure Monitor alert as a mitigation. See [Azure Provider — Security Considerations](/guides/providers/azure/#security-considerations) for the full analysis.
+</Aside>
+
+<Aside type="note">
+This guide creates a sandbox role assignment with `Reader` access on a non-production resource group. You will need an Azure subscription and `Owner` or `User Access Administrator` on the target scope.
+</Aside>
+
+## What You'll Need
+
+- A working jitsudo local environment (from the [Quickstart](/docs/quickstart/))
+- An Azure subscription you control
+- The `az` CLI installed and authenticated (`az login`)
+- `Owner` or `User Access Administrator` role on the target subscription or resource group
+
+## Step 1: Create a Sandbox Resource Group
+
+```bash
+az group create \
+  --name jitsudo-sandbox \
+  --location eastus
+```
+
+## Step 2: Create a Service Principal for jitsudod
+
+```bash
+# Create the service principal with User Access Administrator on the resource group
+az ad sp create-for-rbac \
+  --name jitsudo-control-plane \
+  --role "User Access Administrator" \
+  --scopes "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/jitsudo-sandbox"
+
+# Note the appId, password, and tenant from the output — you will need them below
+```
+
+Grant Microsoft Graph `User.Read.All` so jitsudod can resolve user email → Azure object ID:
+
+```bash
+# Get the app ID
+APP_ID=$(az ad sp list --display-name jitsudo-control-plane \
+  --query '[0].appId' -o tsv)
+
+# Add the Graph permission (requires Entra admin consent)
+az ad app permission add \
+  --id "$APP_ID" \
+  --api 00000003-0000-0000-c000-000000000000 \
+  --api-permissions df021288-bdef-4463-88db-98f22de89214=Role
+
+az ad app permission admin-consent --id "$APP_ID"
+```
+
+<Aside type="tip">
+In production on AKS, use Azure Workload Identity instead of a client secret. See the [Azure Provider guide](/guides/providers/azure/) for the full Workload Identity setup.
+</Aside>
+
+## Step 3: Configure jitsudod for Azure
+
+Add the Azure provider block to your `jitsudod.yaml`:
+
+```yaml
+providers:
+  azure:
+    tenant_id: "YOUR_TENANT_ID"
+    default_subscription_id: "YOUR_SUBSCRIPTION_ID"
+    client_id: "YOUR_APP_ID"
+    credentials_source: "client_secret"
+    max_duration: "1h"
+```
+
+Set the client secret via environment variable (never in the config file):
+
+```bash
+export AZURE_CLIENT_SECRET="YOUR_SP_PASSWORD"
+```
+
+Restart jitsudod with `make docker-up` (or your equivalent).
+
+## Step 4: Set Up the Azure Monitor Alert (Recommended)
+
+Before testing, set up the monitoring mitigation for Azure RBAC's lack of native TTL enforcement. This alert fires if a jitsudo-managed role assignment persists longer than your maximum permitted TTL:
+
+```bash
+# Create an alert rule on role assignments by jitsudo's service principal
+# that are older than your max_duration (adjust threshold to match your config)
+az monitor activity-log alert create \
+  --name "jitsudo-stale-rbac-assignment" \
+  --resource-group jitsudo-sandbox \
+  --condition category=Administrative \
+  --condition operationName=Microsoft.Authorization/roleAssignments/write \
+  --action-group YOUR_ACTION_GROUP_ID \
+  --description "Alert: jitsudo RBAC assignment may be stale — check jitsudod availability"
+```
+
+<Aside type="note">
+This alert is a mitigation for the scenario where jitsudod is unavailable and the expiry sweeper has stopped. See [Azure Provider — Security Considerations](/guides/providers/azure/#security-considerations) for full details and additional mitigations including Azure PIM as a secondary enforcement layer.
+</Aside>
+
+## Step 5: Apply an Eligibility Policy
+
+```bash
+cat > azure-eligibility.rego << 'EOF'
+package jitsudo.eligibility
+
+import future.keywords.if
+
+default allow = false
+default reason = "not authorized"
+
+allow if {
+  input.user.groups[_] == "sre"
+  input.request.provider == "azure"
+  input.request.role == "Reader"
+  input.request.duration_seconds <= 3600
+}
+
+reason = "allowed" if { allow }
+EOF
+
+jitsudo policy apply -f azure-eligibility.rego \
+  --type eligibility \
+  --name azure-sandbox-eligibility
+```
+
+## Step 6: Submit a Real Azure Request
+
+```bash
+jitsudo request \
+  --provider azure \
+  --role Reader \
+  --scope /subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/jitsudo-sandbox \
+  --duration 30m \
+  --reason "Testing real Azure provider - sandbox"
+```
+
+You should see:
+
+```
+✓ Request submitted (ID: req_01...)
+⏳ Awaiting approval
+```
+
+## Step 7: Approve the Request
+
+In a second terminal:
+
+```bash
+jitsudo approve req_01...
+```
+
+## Step 8: Execute with Real Azure Credentials
+
+```bash
+# List resources in the sandbox resource group using the elevated assignment
+jitsudo exec req_01... -- az resource list \
+  --resource-group jitsudo-sandbox
+```
+
+The `exec` command injects `AZURE_SUBSCRIPTION_ID` into the subprocess.
+
+## Step 9: Verify the Role Assignment in Azure
+
+```bash
+# Confirm the assignment exists in Azure
+az role assignment list \
+  --resource-group jitsudo-sandbox \
+  --assignee YOUR_USER_EMAIL \
+  --output table
+```
+
+You will see the `Reader` assignment. Note that unlike GCP, **there is no expiry condition visible here** — the assignment appears as permanent from Azure's perspective. The TTL is enforced entirely by jitsudod's expiry sweeper. This is the fundamental difference from GCP that the Azure Monitor alert in Step 4 is designed to mitigate.
+
+## Step 10: Verify the Audit Log
+
+```bash
+jitsudo audit --request req_01...
+```
+
+You should see `request.created`, `request.approved`, `grant.issued`. After the TTL expires and the sweeper runs, `grant.revoked` will appear and the Azure role assignment will be deleted.
+
+## Step 11: Test Early Revocation
+
+```bash
+jitsudo revoke req_01...
+```
+
+Verify the assignment is gone:
+
+```bash
+az role assignment list \
+  --resource-group jitsudo-sandbox \
+  --assignee YOUR_USER_EMAIL \
+  --output table
+# Should return empty — assignment has been deleted
+```
+
+## Cleanup
+
+```bash
+# The role assignment is removed on revocation or expiry.
+# Delete the sandbox resource group:
+az group delete --name jitsudo-sandbox --yes --no-wait
+
+# Delete the service principal:
+az ad sp delete --id "$APP_ID"
+```
+
+## Next Steps
+
+- See the full [Azure Provider guide](/guides/providers/azure/) for production configuration, including Workload Identity, subscription-scope assignments, and the full security considerations
+- See [Security Hardening](/guides/security-hardening/) before deploying to production

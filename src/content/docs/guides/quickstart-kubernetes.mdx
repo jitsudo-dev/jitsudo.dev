@@ -1,0 +1,265 @@
+---
+title: First Real Request — Kubernetes
+description: Walk through a complete jitsudo elevation request using a real Kubernetes cluster, from RBAC setup to temporary RoleBinding creation and verified revocation.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This guide extends the [Quickstart](/docs/quickstart/) to use a real Kubernetes cluster instead of the mock provider. By the end you will have submitted, approved, and executed a `kubectl` command using a temporary RBAC binding that jitsudo manages.
+
+<Aside type="note">
+This guide uses a local `kind` or `minikube` cluster, or any cluster you have admin access to. No production namespaces are touched. You will need `cluster-admin` to create ClusterRoles and RoleBindings.
+</Aside>
+
+## How jitsudo Maps to Kubernetes RBAC
+
+Before starting, it helps to understand how jitsudo's abstract concepts map to Kubernetes:
+
+| jitsudo concept | Kubernetes equivalent |
+|---|---|
+| `--role` | A `ClusterRole` name that must already exist in the cluster |
+| `--scope` | A namespace (creates a `RoleBinding`) or `*` (creates a `ClusterRoleBinding`) |
+| Grant issued | jitsudo creates a `RoleBinding` or `ClusterRoleBinding` for the requester's identity |
+| Grant expired/revoked | jitsudo deletes the `RoleBinding` or `ClusterRoleBinding` |
+
+<Aside type="caution">
+Unlike GCP (which uses IAM conditions) and like Azure (which relies on the sweeper), Kubernetes RBAC has no native binding expiry. jitsudo's expiry sweeper is the sole TTL enforcement mechanism. Monitor jitsudod availability if you use the Kubernetes provider in production.
+</Aside>
+
+## What You'll Need
+
+- A working jitsudo local environment (from the [Quickstart](/docs/quickstart/))
+- A Kubernetes cluster with `kubectl` configured and `cluster-admin` access
+- A `kind` or `minikube` cluster works perfectly for this guide
+
+## Step 1: Create a Sandbox Namespace
+
+```bash
+kubectl create namespace jitsudo-sandbox
+```
+
+## Step 2: Create a Target ClusterRole
+
+jitsudo's Kubernetes provider assumes the `ClusterRole` already exists — it creates and deletes `RoleBinding` objects, it does not create `ClusterRole` objects. Create the sandbox role:
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jitsudo-sandbox-viewer
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "configmaps"]
+    verbs: ["get", "list", "watch"]
+EOF
+```
+
+## Step 3: Create a Service Account for jitsudod
+
+jitsudod needs a service account with permission to create and delete `RoleBinding` and `ClusterRoleBinding` objects:
+
+```bash
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jitsudo-control-plane
+  namespace: jitsudo-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jitsudo-rbac-manager
+rules:
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["rolebindings", "clusterrolebindings"]
+    verbs: ["get", "list", "create", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jitsudo-rbac-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jitsudo-rbac-manager
+subjects:
+  - kind: ServiceAccount
+    name: jitsudo-control-plane
+    namespace: jitsudo-system
+EOF
+```
+
+<Aside type="tip">
+The `jitsudo-rbac-manager` ClusterRole above grants the ability to create and delete any RoleBinding or ClusterRoleBinding cluster-wide. For production, restrict this to specific namespaces using a `Role` and `RoleBinding` scoped to those namespaces rather than a cluster-wide `ClusterRoleBinding`.
+</Aside>
+
+## Step 4: Configure jitsudod for Kubernetes
+
+For local development, generate a kubeconfig for the jitsudo service account:
+
+```bash
+# Get the service account token
+TOKEN=$(kubectl create token jitsudo-control-plane \
+  --namespace jitsudo-system \
+  --duration 24h)
+
+# Get the cluster CA and server
+CLUSTER_CA=$(kubectl config view --raw \
+  -o jsonpath='{.clusters[0].cluster.certificate-authority-data}')
+CLUSTER_SERVER=$(kubectl config view \
+  -o jsonpath='{.clusters[0].cluster.server}')
+
+# Write a kubeconfig for jitsudod
+cat > jitsudo-kubeconfig.yaml << EOF
+apiVersion: v1
+kind: Config
+clusters:
+  - name: sandbox
+    cluster:
+      certificate-authority-data: ${CLUSTER_CA}
+      server: ${CLUSTER_SERVER}
+contexts:
+  - name: jitsudo
+    context:
+      cluster: sandbox
+      user: jitsudo
+current-context: jitsudo
+users:
+  - name: jitsudo
+    user:
+      token: ${TOKEN}
+EOF
+```
+
+Add the Kubernetes provider block to your `jitsudod.yaml`:
+
+```yaml
+providers:
+  kubernetes:
+    kubeconfig: "./jitsudo-kubeconfig.yaml"
+    max_duration: "2h"
+```
+
+Restart jitsudod with `make docker-up` (or your equivalent).
+
+## Step 5: Apply an Eligibility Policy
+
+```bash
+cat > k8s-eligibility.rego << 'EOF'
+package jitsudo.eligibility
+
+import future.keywords.if
+
+default allow = false
+default reason = "not authorized"
+
+allow if {
+  input.user.groups[_] == "sre"
+  input.request.provider == "kubernetes"
+  input.request.role == "jitsudo-sandbox-viewer"
+  input.request.resource_scope == "jitsudo-sandbox"
+  input.request.duration_seconds <= 3600
+}
+
+reason = "allowed" if { allow }
+EOF
+
+jitsudo policy apply -f k8s-eligibility.rego \
+  --type eligibility \
+  --name k8s-sandbox-eligibility
+```
+
+## Step 6: Submit a Real Kubernetes Request
+
+```bash
+jitsudo request \
+  --provider kubernetes \
+  --role jitsudo-sandbox-viewer \
+  --scope jitsudo-sandbox \
+  --duration 30m \
+  --reason "Testing real Kubernetes provider - sandbox"
+```
+
+The `--scope` value is the namespace. For a cluster-scoped binding, use `--scope *`.
+
+You should see:
+
+```
+✓ Request submitted (ID: req_01...)
+⏳ Awaiting approval
+```
+
+## Step 7: Approve the Request
+
+In a second terminal:
+
+```bash
+jitsudo approve req_01...
+```
+
+## Step 8: Verify the RoleBinding Was Created
+
+```bash
+# Confirm jitsudo created the RoleBinding
+kubectl get rolebindings -n jitsudo-sandbox
+
+# Inspect it
+kubectl describe rolebinding -n jitsudo-sandbox \
+  $(kubectl get rolebindings -n jitsudo-sandbox -o name | grep jitsudo)
+```
+
+You will see a `RoleBinding` created by jitsudo's service account, binding your user identity to `jitsudo-sandbox-viewer` in the `jitsudo-sandbox` namespace.
+
+## Step 9: Execute with Real Kubernetes Credentials
+
+```bash
+# List pods in the sandbox namespace using the elevated binding
+jitsudo exec req_01... -- kubectl get pods -n jitsudo-sandbox
+```
+
+The `exec` command injects `KUBECONFIG` pointing to a temporary kubeconfig that authenticates as your user identity. The RoleBinding grants `get`, `list`, and `watch` on pods, services, and configmaps in the sandbox namespace.
+
+## Step 10: Verify the Audit Log
+
+```bash
+jitsudo audit --request req_01...
+```
+
+You should see `request.created`, `request.approved`, `grant.issued`. When the TTL expires and the sweeper runs, `grant.revoked` will appear and the `RoleBinding` will be deleted.
+
+## Step 11: Test Early Revocation
+
+```bash
+jitsudo revoke req_01...
+```
+
+Verify the RoleBinding is gone:
+
+```bash
+kubectl get rolebindings -n jitsudo-sandbox
+# Should return: No resources found in jitsudo-sandbox namespace.
+```
+
+Verify access is revoked:
+
+```bash
+jitsudo exec req_01... -- kubectl get pods -n jitsudo-sandbox
+# Should fail: Forbidden
+```
+
+## Cleanup
+
+```bash
+kubectl delete namespace jitsudo-sandbox
+kubectl delete clusterrole jitsudo-sandbox-viewer jitsudo-rbac-manager
+kubectl delete clusterrolebinding jitsudo-rbac-manager
+kubectl delete serviceaccount jitsudo-control-plane -n jitsudo-system
+rm jitsudo-kubeconfig.yaml
+```
+
+## Next Steps
+
+- See the full [Kubernetes Provider guide](/guides/providers/kubernetes/) for production configuration, including in-cluster service account auth, namespace restrictions, and RBAC design for multi-tenant clusters
+- See [Security Hardening](/guides/security-hardening/) before deploying to production
