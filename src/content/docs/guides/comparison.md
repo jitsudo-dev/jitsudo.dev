@@ -40,7 +40,7 @@ jitsudo is designed for this reality:
 
 ## Commercial PAM: Powerful but Heavy
 
-Enterprise PAM platforms (CyberArk, BeyondTrust, StrongDM, Teleport) are powerful, comprehensive tools. They cover session recording, bastion host functionality, credential vaulting, compliance reporting, and JIT access — all in one product.
+Enterprise PAM platforms (CyberArk, BeyondTrust, StrongDM) are powerful, comprehensive tools. They cover session recording, bastion host functionality, credential vaulting, compliance reporting, and JIT access — all in one product.
 
 **The trade-offs:**
 
@@ -50,9 +50,28 @@ Enterprise PAM platforms (CyberArk, BeyondTrust, StrongDM, Teleport) are powerfu
 - **Complexity**: full PAM suites are multi-week implementations. jitsudo can be operational in a day.
 - **Not agent-native**: none of these tools were designed with AI agents as first-class requestors or approvers.
 
-**A note on Teleport.** Teleport deserves specific mention because it is open source, has a strong CLI (`tsh`), and is widely used in infrastructure teams. It is an excellent tool — for a different problem. Teleport is primarily a **network access and session recording** platform: it manages access to servers, databases, Kubernetes clusters, and internal web apps via its proxy model. It does not manage cloud IAM role assignments (AWS IAM roles, Azure RBAC, GCP IAM). If your threat model centers on audited network access and session recording, Teleport is a good choice. If it centers on temporary cloud IAM privilege elevation with policy-as-code approval workflows, that is jitsudo's problem space. Many teams use both.
-
 jitsudo's position: **not a full PAM suite**. jitsudo does JIT access management well. It does not do session recording, VPN, credential vaulting, or bastion host functionality — those are separate tools with separate jobs. See [What jitsudo is NOT](/docs/what-is-jitsudo/#what-jitsudo-is-not).
+
+---
+
+## Teleport
+
+Teleport is open source (Apache 2.0), has a strong CLI (`tsh`), and is widely used in infrastructure teams. It deserves its own section because it is frequently evaluated alongside jitsudo — and the comparison is not straightforward.
+
+**What Teleport does:** Teleport is a **network access and session recording** platform. It manages access to servers, databases, Kubernetes clusters, and internal web apps via its proxy model. It provides audited SSH, database, and kubectl sessions with session recording and replay.
+
+**What Teleport does not do:** Teleport does not manage cloud IAM role assignments. It cannot grant a user a temporary `roles/storage.objectViewer` binding in GCP IAM, a temporary `Reader` role assignment in Azure RBAC, or a temporary `sts:AssumeRole` session in AWS IAM. These are fundamentally different things from network access.
+
+| Dimension | Teleport | jitsudo |
+|-----------|----------|---------|
+| Network access (SSH, DB, kubectl) | ✓ | ✗ |
+| Session recording | ✓ | ✗ |
+| Cloud IAM JIT (AWS, Azure, GCP) | ✗ | ✓ |
+| Kubernetes RBAC JIT | Partial (via app access) | ✓ (RoleBinding management) |
+| Policy-as-code | Partial (YAML RBAC) | ✓ (OPA/Rego) |
+| Open source | ✓ (Apache 2.0 core) | ✓ (ELv2 control plane) |
+
+If your threat model centers on audited network access and session recording, Teleport is a good choice. If it centers on temporary cloud IAM privilege elevation with policy-as-code approval workflows, that is jitsudo's problem space. Many teams run both.
 
 ---
 

@@ -198,6 +198,22 @@ jitsudo login \
 jitsudo server status --server-url https://jitsudo.example.com
 ```
 
+## 8. Enroll the First Administrator
+
+`server init` does not create any administrator accounts. Admin authority in jitsudo is derived entirely from your identity provider: users who are members of the `jitsudo-admins` IdP group receive admin privileges when they authenticate.
+
+**Day-one steps:**
+
+1. In your IdP, create a group named exactly `jitsudo-admins`.
+2. Add the first administrator's account to that group.
+3. That user logs in: `jitsudo login --server https://jitsudo.example.com:8443`
+
+The administrator can now assign [principal trust tiers](/docs/architecture/approval-model/#principal-trust-tiers) and perform other privileged control plane operations.
+
+See [Admin Bootstrap](/docs/cli/server/#admin-bootstrap) for the full procedure, including ongoing membership management and the recovery path if all administrators are offboarded.
+
+---
+
 ## Updates
 
 To update jitsudod:
