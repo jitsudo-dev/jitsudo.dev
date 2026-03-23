@@ -1,0 +1,16 @@
+# jitsudo.dev — Site License
+
+Copyright © 2026 Yu Technology Group, LLC d/b/a jitsudo. All rights reserved.
+
+## Site Code and Design
+
+The site source code, design, CSS, and components in this repository (excluding
+documentation content) are proprietary. You may not copy, distribute, or create
+derivative works from them without explicit written permission from
+Yu Technology Group, LLC.
+
+## Documentation Content
+
+Documentation content located in src/content/docs/ is licensed separately under
+the Creative Commons Attribution 4.0 International License (CC BY 4.0):
+https://creativecommons.org/licenses/by/4.0/

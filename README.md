@@ -52,3 +52,7 @@ npm run preview    # preview production build locally
 ## License
 
 Documentation: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+## Copyright
+
+Copyright © 2026 Yu Technology Group, LLC d/b/a jitsudo. All rights reserved.
