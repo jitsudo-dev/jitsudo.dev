@@ -51,8 +51,6 @@ export JITSUDOD_OIDC_CLIENT_ID="jitsudo-server"
 jitsudod init --config-out /etc/jitsudo/config.yaml
 ```
 
-`jitsudod init` honours `JITSUDOD_DATABASE_URL`, `JITSUDOD_OIDC_ISSUER`, and `JITSUDOD_OIDC_CLIENT_ID` with the same priority as their flag equivalents.
-
 Note: the generated `jitsudo.yaml` will still contain the database URL. To avoid storing credentials in the config file for the running server, set `JITSUDOD_DATABASE_URL` at runtime — the server always overrides the config file value with the environment variable. See the [Security Hardening Guide](/guides/security-hardening/) for the recommended production setup.
 :::
 
