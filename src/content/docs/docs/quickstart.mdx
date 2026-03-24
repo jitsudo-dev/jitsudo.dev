@@ -22,11 +22,11 @@ This quickstart runs jitsudo locally using Docker Compose. You'll have a fully f
 
    ```bash
    make docker-up
-   export JITSUDO_SERVER=http://localhost:8080
+   export JITSUDO_SERVER=localhost:8443
    ```
 
    This starts:
-   - `jitsudod` — the control plane on `localhost:8080`
+   - `jitsudod` — HTTP REST API on `localhost:8080`, gRPC on `localhost:8443`
    - `PostgreSQL` — the database
    - `dex` — a mock OIDC provider on `localhost:5556`
 
