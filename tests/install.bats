@@ -128,12 +128,13 @@ _make_checksums() {
     rm -rf "$tmpdir"
 }
 
-@test "install_binary: falls back to ~/.local/bin when INSTALL_PREFIX not writable" {
+@test "install_binary: falls back to ~/.local/bin when INSTALL_PREFIX does not exist" {
     tmpdir="$(mktemp -d)"
-    # Create a non-writable install prefix
-    fake_prefix="$(mktemp -d)"
-    mkdir -p "$fake_prefix/bin"
-    chmod 555 "$fake_prefix/bin"
+    # Use a non-existent prefix so both -d checks in install_binary fail,
+    # bypassing the writable-check path and the sudo path entirely.
+    # A chmod 555 approach fails on CI because passwordless sudo can still
+    # write to a 555 directory, preventing the fallback from triggering.
+    fake_prefix="$tmpdir/nonexistent"
 
     printf '#!/bin/sh\necho jitsudo\n' > "$tmpdir/jitsudo-linux-amd64"
     chmod +x "$tmpdir/jitsudo-linux-amd64"
@@ -147,8 +148,7 @@ _make_checksums() {
     [ "$status" -eq 0 ]
     [ -x "$tmpdir/.local/bin/jitsudo" ]
 
-    chmod 755 "$fake_prefix/bin"
-    rm -rf "$tmpdir" "$fake_prefix"
+    rm -rf "$tmpdir"
 }
 
 # ---------------------------------------------------------------------------
