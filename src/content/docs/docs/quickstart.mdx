@@ -22,13 +22,15 @@ This quickstart runs jitsudo locally using Docker Compose. You'll have a fully f
 
    ```bash
    make docker-up
-   export JITSUDO_SERVER=http://localhost:8080
+   export JITSUDO_SERVER=localhost:8443
    ```
 
    This starts:
-   - `jitsudod` — the control plane on `localhost:8080`
+   - `jitsudod` — HTTP REST API on `localhost:8080`, gRPC on `localhost:8443`
    - `PostgreSQL` — the database
    - `dex` — a mock OIDC provider on `localhost:5556`
+
+   `JITSUDO_SERVER` must point to the **gRPC port** (`8443`). You can also pass `--server localhost:8443` on individual commands, or set `server: localhost:8443` in `~/.jitsudo/config.yaml`.
 
 3. **Install the CLI**
 
