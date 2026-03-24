@@ -22,12 +22,15 @@ This quickstart runs jitsudo locally using Docker Compose. You'll have a fully f
 
    ```bash
    make docker-up
+   export JITSUDO_SERVER=http://localhost:8080
    ```
 
    This starts:
    - `jitsudod` — the control plane on `localhost:8080`
    - `PostgreSQL` — the database
    - `dex` — a mock OIDC provider on `localhost:5556`
+
+   Setting `JITSUDO_SERVER` tells the CLI where to find the control plane. You can also pass `--server http://localhost:8080` on individual commands, or set `server: http://localhost:8080` in `~/.jitsudo/config.yaml`.
 
 3. **Install the CLI**
 
@@ -58,10 +61,10 @@ This quickstart runs jitsudo locally using Docker Compose. You'll have a fully f
    jitsudo request \
      --provider mock \
      --role test-role \
-     --scope test-scope \
-     --duration 1h \
-     --reason "Testing jitsudo locally"
+     --scope test-scope
    ```
+
+   `--duration` defaults to `1h`. `--reason` is optional (enforceable via policy).
 
    Note the request ID (e.g., `req_01J8KZ...`).
 
