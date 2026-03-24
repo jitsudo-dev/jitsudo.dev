@@ -63,15 +63,21 @@ OIDC token validation settings.
 | Field | YAML key | Env var | Default | Description |
 |-------|----------|---------|---------|-------------|
 | OIDC issuer | `auth.oidc_issuer` | `JITSUDOD_OIDC_ISSUER` | `http://localhost:5556/dex` | Must match the `iss` claim in tokens issued by your IdP |
-| Client ID | `auth.client_id` | `JITSUDOD_OIDC_CLIENT_ID` | `jitsudo-cli` | OIDC client ID registered with your IdP for the server |
+| OIDC discovery URL | `auth.oidc_discovery_url` | `JITSUDOD_OIDC_DISCOVERY_URL` | `""` (uses issuer URL) | Override the OIDC discovery endpoint. Use when jitsudod reaches the IdP via a different address than the public issuer URL (e.g. Docker service name). Must point to the **same** provider as `oidc_issuer`. |
+| Client ID | `auth.client_id` | `JITSUDOD_OIDC_CLIENT_ID` | `jitsudo-cli` | Must match the `aud` claim in tokens presented by the CLI. Use `jitsudo-cli` for local dev (dex); set to your IdP's registered client ID in production. |
 
 ```yaml
 auth:
   oidc_issuer: "https://your-idp.example.com"
-  client_id: "jitsudo-server"
+  client_id: "your-oidc-client-id"   # must match the aud claim in CLI tokens
+  # oidc_discovery_url: "http://internal-idp:8080"  # only if IdP is behind a private endpoint
 ```
 
-**Token validation flow:** jitsudod fetches JWKS from `{oidc_issuer}/.well-known/openid-configuration`, verifies the JWT signature, and validates `iss`, `aud`, and `exp` claims.
+**Token validation flow:** jitsudod fetches JWKS from `{oidc_issuer}/.well-known/openid-configuration` (or `oidc_discovery_url` if set), verifies the JWT signature, and validates `iss`, `aud`, and `exp` claims.
+
+:::caution
+`oidc_discovery_url` bypasses the OIDC issuer self-consistency check. It **must** point to the same provider as `oidc_issuer`. Pointing it to a different provider's endpoint is a security vulnerability.
+:::
 
 ---
 

@@ -38,7 +38,7 @@ go run ./cmd/jitsudod
 ```
 
 :::tip[Why run jitsudod on the host?]
-dex issues tokens with `iss=http://localhost:5556/dex`. When jitsudod runs inside Docker it cannot resolve `localhost:5556`, causing token validation to fail. Running jitsudod on the host avoids this mismatch. If you need the full Docker stack, update `JITSUDOD_OIDC_ISSUER` in the compose file to use a hostname reachable from inside the container (e.g. `host.docker.internal`).
+For active development, running jitsudod on the host gives faster iteration — no Docker rebuild on every code change. The full Docker stack (`make docker-up`) is also supported and uses `host.docker.internal` as the OIDC issuer so that both jitsudod inside Docker and the CLI on the host can reach dex at the same URL.
 :::
 
 Alternatively, start the full stack (jitsudod included):
@@ -107,7 +107,9 @@ The compose file sets these environment variables for jitsudod:
 | `JITSUDOD_HTTP_ADDR` | `:8080` |
 | `JITSUDOD_GRPC_ADDR` | `:8443` |
 | `JITSUDOD_DATABASE_URL` | `postgres://jitsudo:jitsudo@postgres:5432/jitsudo?sslmode=disable` |
-| `JITSUDOD_OIDC_ISSUER` | `http://dex:5556/dex` |
+| `JITSUDOD_OIDC_ISSUER` | `http://localhost:5556/dex` |
+| `JITSUDOD_OIDC_DISCOVERY_URL` | `http://dex:5556/dex` — jitsudod fetches OIDC discovery via the Docker-internal hostname while tokens carry the `localhost` issuer URL |
+| `JITSUDOD_OIDC_CLIENT_ID` | `jitsudo-cli` |
 | `JITSUDOD_OIDC_CLIENT_ID` | `jitsudo-server` |
 
 ## Stopping
