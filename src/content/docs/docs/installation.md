@@ -25,9 +25,9 @@ Download the binary for your platform from the [GitHub Releases page](https://gi
 
 ```bash
 # Linux amd64
-curl -LO https://github.com/jitsudo-dev/jitsudo/releases/latest/download/jitsudo_linux_amd64
-chmod +x jitsudo_linux_amd64
-sudo mv jitsudo_linux_amd64 /usr/local/bin/jitsudo
+curl -LO https://github.com/jitsudo-dev/jitsudo/releases/latest/download/jitsudo-linux-amd64
+chmod +x jitsudo-linux-amd64
+sudo mv jitsudo-linux-amd64 /usr/local/bin/jitsudo
 ```
 
 ### Build from source
