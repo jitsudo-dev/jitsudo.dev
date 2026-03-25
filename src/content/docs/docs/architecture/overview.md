@@ -12,8 +12,8 @@ REQUESTORS                              APPROVERS
 ──────────                              ────────────────────────
 jitsudo CLI ──┐                         OPA (Tier 1, auto)
               │                         AI agent via MCP (Tier 2)
-MCP server ───┤── gRPC / REST (mTLS) ──▶ Human via Slack/CLI (Tier 3)
-  (requestor) │
+AI agent ─────┤── gRPC / REST (mTLS) ──▶ Human via Slack/CLI (Tier 3)
+  (MCP client) │
 Slack bot ────┘
 
 ┌──────────────────────────────────────────────────────────────┐
