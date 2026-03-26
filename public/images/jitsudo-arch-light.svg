@@ -1,90 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 660" style="background:#f8fafc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 522" style="background:#f8fafc">
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M2 1L8 5L2 9" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
 
-  <!-- ── WHO REQUESTS ── -->
-  <text x="340" y="22" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10.4" font-weight="600" fill="#94a3b8" letter-spacing="0.1em">WHO REQUESTS</text>
+  <!-- jitsudo CLI -->
+  <rect x="60" y="24" width="168" height="40" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="144" y="49" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#ea580c">jitsudo CLI</text>
 
-  <!-- jitsudo CLI — orange accent -->
-  <rect x="60" y="32" width="168" height="40" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
-  <text x="144" y="57" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#ea580c">jitsudo CLI</text>
+  <!-- AI agent -->
+  <rect x="256" y="24" width="168" height="40" rx="6" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
+  <text x="340" y="49" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#0369a1">AI agent</text>
 
-  <!-- AI agent — sky blue -->
-  <rect x="256" y="32" width="168" height="40" rx="6" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
-  <text x="340" y="57" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#0369a1">AI agent</text>
+  <!-- Slack bot -->
+  <rect x="452" y="24" width="168" height="40" rx="6" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
+  <text x="536" y="49" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#0369a1">Slack bot</text>
 
-  <!-- Slack bot — sky blue same as AI agent -->
-  <rect x="452" y="32" width="168" height="40" rx="6" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
-  <text x="536" y="57" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="500" fill="#0369a1">Slack bot</text>
+  <!-- Arrows: requestors → IdP/SSO -->
+  <line x1="144" y1="64" x2="144" y2="100" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="340" y1="64" x2="340" y2="100" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="536" y1="64" x2="536" y2="100" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="340" y="80" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">authenticates via</text>
 
-  <!-- Arrows from all three down to IdP -->
-  <line x1="144" y1="72" x2="144" y2="108" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <line x1="340" y1="72" x2="340" y2="108" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <line x1="536" y1="72" x2="536" y2="108" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <!-- IdP / SSO -->
+  <rect x="60" y="100" width="560" height="40" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="115" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#0f172a">IdP / SSO</text>
+  <text x="340" y="132" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">Okta · Entra · Google</text>
 
-  <!-- authenticate via label -->
-  <text x="340" y="95" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">authenticate via</text>
+  <!-- Arrow: IdP/SSO → jitsudod -->
+  <line x1="340" y1="140" x2="340" y2="192" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="340" y="162" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">authenticated request</text>
 
-  <!-- IdP / SSO — full width x=60 w=560 -->
-  <rect x="60" y="110" width="560" height="44" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="340" y="129" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#0f172a">IdP / SSO</text>
-  <text x="340" y="146" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">Okta · Entra · Google</text>
+  <!-- jitsudod -->
+  <rect x="256" y="192" width="168" height="40" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+  <text x="340" y="217" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#ea580c">jitsudod</text>
 
-  <!-- Arrow down: authenticated request -->
-  <line x1="340" y1="154" x2="340" y2="193" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <text x="340" y="181" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">authenticated request</text>
+  <!-- Arrow: jitsudod → fan-out -->
+  <line x1="340" y1="232" x2="340" y2="284" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="340" y="254" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">OPA routes to one tier for approval</text>
 
-  <!-- ── CONTROL PLANE ── -->
-  <text x="340" y="210" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10.4" font-weight="600" fill="#94a3b8" letter-spacing="0.1em">CONTROL PLANE</text>
-
-  <!-- jitsudod — orange accent, same weight/thickness as jitsudo CLI -->
-  <rect x="256" y="218" width="168" height="40" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
-  <text x="340" y="243" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="700" fill="#ea580c">jitsudod</text>
-
-  <!-- Arrow down: OPA routes -->
-  <line x1="340" y1="258" x2="340" y2="324" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <text x="340" y="312" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">OPA routes to exactly one tier</text>
-
-  <!-- ── APPROVAL ── -->
-  <text x="340" y="342" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10.4" font-weight="600" fill="#94a3b8" letter-spacing="0.1em">APPROVAL</text>
-
-  <!-- Fan-out -->
-  <line x1="340" y1="324" x2="340" y2="352" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="144" y1="352" x2="536" y2="352" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="144" y1="352" x2="144" y2="368" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <line x1="340" y1="352" x2="340" y2="368" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <line x1="536" y1="352" x2="536" y2="368" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <!-- Fan-out bar → tier boxes -->
+  <line x1="144" y1="284" x2="536" y2="284" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="144" y1="284" x2="144" y2="308" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="340" y1="284" x2="340" y2="308" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="536" y1="284" x2="536" y2="308" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
 
   <!-- Tier 1: green -->
-  <rect x="60" y="368" width="168" height="56" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
-  <text x="144" y="391" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#15803d" letter-spacing="0.04em">Tier 1</text>
-  <text x="144" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">auto-approve</text>
+  <rect x="60" y="308" width="168" height="56" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+  <text x="144" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#15803d" letter-spacing="0.04em">Tier 1</text>
+  <text x="144" y="346" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">auto-approve</text>
 
   <!-- Tier 2: yellow -->
-  <rect x="256" y="368" width="168" height="56" rx="6" fill="#fefce8" stroke="#fef08a" stroke-width="1"/>
-  <text x="340" y="391" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#854d0e" letter-spacing="0.04em">Tier 2</text>
-  <text x="340" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">AI review</text>
+  <rect x="256" y="308" width="168" height="56" rx="6" fill="#fefce8" stroke="#fef08a" stroke-width="1"/>
+  <text x="340" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#854d0e" letter-spacing="0.04em">Tier 2</text>
+  <text x="340" y="346" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">AI review</text>
 
   <!-- Tier 3: red -->
-  <rect x="452" y="368" width="168" height="56" rx="6" fill="#fff1f2" stroke="#fecdd3" stroke-width="1"/>
-  <text x="536" y="391" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#b91c1c" letter-spacing="0.04em">Tier 3</text>
-  <text x="536" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">human approval</text>
+  <rect x="452" y="308" width="168" height="56" rx="6" fill="#fef2f2" stroke="#fecdd3" stroke-width="1"/>
+  <text x="536" y="329" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" font-weight="600" fill="#dc2626" letter-spacing="0.04em">Tier 3</text>
+  <text x="536" y="346" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">human approval</text>
 
-  <!-- Converge -->
-  <line x1="144" y1="424" x2="144" y2="452" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="340" y1="424" x2="340" y2="452" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="536" y1="424" x2="536" y2="452" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="144" y1="452" x2="536" y2="452" stroke="#e2e8f0" stroke-width="1"/>
-  <line x1="340" y1="452" x2="340" y2="488" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
-  <text x="340" y="477" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">if approved, grants access to</text>
+  <!-- Converge: tier boxes → single arrow → ACCESS -->
+  <line x1="144" y1="364" x2="144" y2="392" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="340" y1="364" x2="340" y2="392" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="536" y1="364" x2="536" y2="392" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="144" y1="392" x2="536" y2="392" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="340" y1="392" x2="340" y2="440" stroke="#e2e8f0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="340" y="410" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9.9" fill="#94a3b8">if approved, grants access to</text>
 
-  <!-- ── ACCESS ── -->
-  <text x="340" y="505" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10.4" font-weight="600" fill="#94a3b8" letter-spacing="0.1em">ACCESS</text>
-
-  <rect x="60" y="512" width="560" height="58" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
-  <text x="340" y="536" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#0f172a">AWS IAM · GCP IAM · Entra ID · K8s RBAC</text>
-  <text x="340" y="556" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">time-limited · auto-expires · fully audited</text>
+  <!-- ACCESS -->
+  <rect x="60" y="440" width="560" height="58" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="340" y="462" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" font-weight="600" fill="#0f172a">AWS IAM · GCP IAM · Entra ID · K8s RBAC</text>
+  <text x="340" y="479" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#64748b">time-limited · auto-expires · fully audited</text>
 </svg>
