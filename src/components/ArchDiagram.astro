@@ -1,5 +1,5 @@
 ---
-// Architecture diagram — CSS layout (responsive, no SVG fragility)
+// Architecture diagram — static SVG (dark/light via prefers-color-scheme)
 ---
 
 <section class="arch" id="how-it-works">
@@ -11,79 +11,16 @@
     </p>
 
     <div class="diagram-container">
-      <div class="diagram">
-        <!-- Requestors -->
-        <div class="col">
-          <div class="col-header">REQUESTORS</div>
-          <div class="col-boxes">
-            <div class="box box-cli">CLI (jitsudo)</div>
-            <div class="box box-mcp">AI Agent (MCP client)</div>
-            <div class="box box-slack">Slack bot</div>
-          </div>
-        </div>
-
-        <!-- Arrow left -->
-        <div class="arrow-col">
-          <div class="arrow-label">OIDC / gRPC</div>
-          <div class="arrow-line">
-            <div class="arrow-shaft"></div>
-            <div class="arrow-head">›</div>
-          </div>
-        </div>
-
-        <!-- Control plane -->
-        <div class="col col-center">
-          <div class="col-header">CONTROL PLANE</div>
-          <div class="box box-main">
-            <span class="main-name">jitsudod</span>
-            <div class="main-badges">
-              <span class="inner-badge">OPA</span>
-              <span class="inner-badge">PostgreSQL</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Arrow right (to providers) -->
-        <div class="arrow-col">
-          <div class="arrow-label">provider plugin</div>
-          <div class="arrow-line">
-            <div class="arrow-shaft"></div>
-            <div class="arrow-head">›</div>
-          </div>
-        </div>
-
-        <!-- Providers -->
-        <div class="col">
-          <div class="col-header">PROVIDERS</div>
-          <div class="col-boxes">
-            <div class="box">AWS IAM</div>
-            <div class="box">Azure AD</div>
-            <div class="box">GCP IAM</div>
-            <div class="box">Kubernetes RBAC</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Approval tiers row -->
-      <div class="tiers-row">
-        <div class="tiers-label">APPROVAL TIERS</div>
-        <div class="tiers-boxes">
-          <div class="tier-box tier-1">
-            <span class="tier-num">Tier 1</span>
-            <span class="tier-desc">OPA auto-approve</span>
-          </div>
-          <div class="tier-arrow">→</div>
-          <div class="tier-box tier-2">
-            <span class="tier-num">Tier 2</span>
-            <span class="tier-desc">Async review</span>
-          </div>
-          <div class="tier-arrow">→</div>
-          <div class="tier-box tier-3">
-            <span class="tier-num">Tier 3</span>
-            <span class="tier-desc">Human approval</span>
-          </div>
-        </div>
-      </div>
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcset="/images/jitsudo-arch-light.svg" />
+        <img
+          src="/images/jitsudo-arch-dark.svg"
+          alt="jitsudo architecture: requestors authenticate via IdP, submit requests to jitsudod, OPA routes each request to one approval tier (auto, async, or human), and approved requests grant time-limited access to cloud providers"
+          width="800"
+          height="600"
+          loading="lazy"
+        />
+      </picture>
     </div>
   </div>
 </section>
@@ -128,219 +65,16 @@
 
   .diagram-container {
     background: #1c1e22;
-    border: 1px solid #2a2d31;
-    border-radius: 12px;
-    padding: 2.5rem 2rem;
-    overflow-x: auto;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
   }
 
-  .diagram {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    min-width: 680px;
-  }
-
-  .col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    flex: 1;
-    max-width: 180px;
-  }
-
-  .col-center {
-    max-width: 200px;
-  }
-
-  .col-header {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: #64748b;
-    text-transform: uppercase;
-  }
-
-  .col-boxes {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+  .diagram-container picture,
+  .diagram-container img {
+    display: block;
     width: 100%;
-  }
-
-  .box {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #2a2d31;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    color: #cbd5e1;
-    text-align: center;
-    background: #18191b;
-  }
-
-  .box-cli {
-    border-color: #3a3d42;
-    color: #e2e8f0;
-  }
-
-  .box-mcp {
-    border-color: #1e3a5f;
-    background: #0f1e33;
-    color: #7dd3fc;
-  }
-
-  .box-slack {
-    border-color: #3d2a0f;
-    background: #1e1507;
-    color: #fb923c;
-  }
-
-  .box-main {
-    padding: 1rem 1.25rem;
-    border: 1.5px solid #f97316;
-    border-radius: 8px;
-    background: #1c1e22;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.6rem;
-    width: 100%;
-  }
-
-  .main-name {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #f97316;
-  }
-
-  .main-badges {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .inner-badge {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-    border: 1px solid #2a2d31;
-    border-radius: 4px;
-    color: #94a3b8;
-    background: #18191b;
-  }
-
-  .arrow-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    flex-shrink: 0;
-    padding: 0 0.5rem;
-    margin-top: 1.5rem;
-  }
-
-  .arrow-label {
-    font-size: 0.65rem;
-    color: #475569;
-    white-space: nowrap;
-    letter-spacing: 0.02em;
-  }
-
-  .arrow-line {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    width: 70px;
-  }
-
-  .arrow-shaft {
-    flex: 1;
-    height: 1px;
-    background: #2a2d31;
-  }
-
-  .arrow-head {
-    color: #475569;
-    font-size: 1.1rem;
-    line-height: 1;
-    margin-left: -2px;
-  }
-
-  .tiers-row {
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #2a2d31;
-  }
-
-  .tiers-label {
-    font-size: 0.65rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-bottom: 0.75rem;
-    text-align: center;
-  }
-
-  .tiers-boxes {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .tier-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    border: 1px solid #2a2d31;
-    background: #18191b;
-    min-width: 130px;
-  }
-
-  .tier-1 { border-color: #1e3a5f; background: #0f1e33; }
-  .tier-2 { border-color: #1e3a5f; background: #0f1e33; }
-  .tier-3 { border-color: #1a3a1a; background: #0f1f0f; }
-
-  .tier-num {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: #7dd3fc;
-    letter-spacing: 0.05em;
-  }
-
-  .tier-3 .tier-num { color: #86efac; }
-
-  .tier-desc {
-    font-size: 0.75rem;
-    color: #cbd5e1;
-    text-align: center;
-  }
-
-  .tier-badge {
-    font-size: 0.6rem;
-    padding: 0.15rem 0.4rem;
-    border-radius: 3px;
-    background: #1e2a3a;
-    color: #64748b;
-    border: 1px solid #2a3a4a;
-  }
-
-  .tier-badge-live {
-    background: #0f2010;
-    color: #86efac;
-    border-color: #1a4a1a;
-  }
-
-  .tier-arrow {
-    color: #475569;
-    font-size: 1rem;
+    height: auto;
   }
 
   @media (max-width: 640px) {
