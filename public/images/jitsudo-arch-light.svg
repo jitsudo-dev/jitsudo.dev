@@ -37,7 +37,7 @@
   <!-- jitsudod outer box -->
   <rect x="60" y="248" width="560" height="236" rx="6" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
   <text x="340" y="268" text-anchor="middle" font-family="system-ui,sans-serif" font-size="16" font-weight="700" fill="#ea580c">jitsudod</text>
-  <line x1="80" y1="278" x2="620" y2="278" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="80" y1="278" x2="600" y2="278" stroke="#e2e8f0" stroke-width="1"/>
 
   <!-- OPA subcomponent chip -->
   <rect x="80" y="290" width="190" height="48" rx="4" fill="#f0f9ff" stroke="#bae6fd" stroke-width="1"/>
